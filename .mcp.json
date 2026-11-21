@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "deepspace-docs": {
+      "type": "http",
+      "url": "https://docs.deep.space/mcp"
+    }
+  }
+}

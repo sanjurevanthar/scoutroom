@@ -13,3 +13,13 @@ src/router.ts
 src/modals.tsx
 .claude/launch.json
 .claude/worktrees
+
+# --- agent-tracking secret protection ---
+.env
+.env.*
+.dev.vars*
+.claude/settings.local.json
+*.jsonl
+*.pem
+*.key
+.DS_Store
