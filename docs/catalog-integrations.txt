@@ -1,0 +1,518 @@
+amazon
+  search-products  per_request  $0.0325 per request
+    Search Amazon products, returning normalized listings with price, rating, and Associate-tagged links.
+
+anthropic
+  chat-completion  per_actual_cost metered at the provider's actual cost plus platform markup; free-tier pricing differs
+    Generate text with a Claude model via the Anthropic Messages API. Free-tier pricing differs from paid-tier pricing. Standard pricing applies to: claude-haiku-5-5, claude-haiku-4-5.
+
+anymailfinder
+  create-bulk          per_actual_cost metered at the provider's actual cost plus platform markup
+    Start an asynchronous bulk email-finding search over a table of rows; poll anymailfinder/get-bulk and fetch results with anymailfinder/download-bulk.
+  create-geo-lead      per_actual_cost metered at the provider's actual cost plus platform markup
+    Start an asynchronous GeoLead search for businesses near a location and their emails; poll anymailfinder/get-geo-lead and fetch results with anymailfinder/download-geo-lead.
+  download-bulk        per_request  $0 per request
+    Download a completed bulk search's results, settling billing to the credits Anymail charges on the first download.
+  download-geo-lead    per_request  $0 per request
+    Download a completed GeoLead search's results, settling billing to the credits Anymail charges on the first download.
+  find-company         per_actual_cost metered at the provider's actual cost plus platform markup
+    Find a company's email addresses by domain or company name; a credit is charged only when a valid email is found.
+  find-decision-maker  per_actual_cost metered at the provider's actual cost plus platform markup
+    Find a decision-maker's email at a company by role category; two credits are charged only when a valid email is found.
+  find-linkedin-url    per_actual_cost metered at the provider's actual cost plus platform markup
+    Find the work email behind a LinkedIn profile URL; a credit is charged only when a valid email is found.
+  find-person          per_actual_cost metered at the provider's actual cost plus platform markup
+    Find a person's work email from their name and company or LinkedIn URL; a credit is charged only when a valid email is found.
+  get-bulk             per_request  $0 per request
+    Poll a bulk search's status and counts by searchId; a failed search refunds its reservation.
+  get-geo-lead         per_request  $0 per request
+    Poll a GeoLead search's status and counts by searchId; a failed search refunds its reservation.
+  verify-email         per_actual_cost metered at the provider's actual cost plus platform markup
+    Verify a single email address with a real-time SMTP check.
+
+apify
+  get-actor      per_request  $0 per request
+    Get an Apify Actor's record, current pricing, and default-build input schema.
+  get-run        per_request  $0 per request
+    Poll an Actor run by id; a terminal status returns the dataset items and settles billing to the run's actual cost.
+  run-actor      per_actual_cost metered at the provider's actual cost plus platform markup; free-tier pricing differs
+    Start an asynchronous Apify Actor run billed at its actual usage cost; poll apify/get-run for status, results, and cost. Free-tier pricing differs from paid-tier pricing.
+  search-actors  per_request  $0 per request
+    Search the Apify Store for Actors, by default hiding those whose run cost cannot be capped.
+
+cloudconvert
+  convert-file  per_request  $0.0234 per request
+    Convert a file between formats from a URL or base64 upload, waiting for the CloudConvert job and returning a download URL when the export provides one.
+
+cloudflare
+  jev  per_token    $0.05733 per 1M tokens
+    Evaluate text or structured state against typed Noul, Choice, and Score questions using TypeSafe Jev through Cloudflare AI.
+
+coinbase
+  crypto-price       per_request  $0.0013 per request
+    Get the live USD spot price for a cryptocurrency from Coinbase.
+  search-crypto      per_request  $0.0013 per request
+    List Coinbase's cryptocurrencies, optionally filtered by code or name.
+  search-currencies  per_request  $0.0013 per request
+    List Coinbase's fiat currencies, optionally filtered by id or name.
+
+composio
+  disconnect           per_request  $0 per request
+    Delete the calling user's connection by connected account id.
+  execute-tool         per_request  $0.00052 per request
+    Execute a Composio tool on the calling user's connected account, or return a requiresConnection signal when the app is not yet connected.
+  get-connection       per_request  $0 per request
+    Report a connected account's status for the calling user.
+  get-tool             per_request  $0 per request
+    Get a single Composio tool record, including its input schema, by slug.
+  initiate-connection  per_request  $0 per request
+    Start connecting the calling user to a toolkit, returning Composio's hosted consent URL for them to open.
+  list-connections     per_request  $0 per request
+    List the calling user's Composio connections, scoped to the calling app.
+  list-toolkits        per_request  $0 per request
+    List connectable Composio toolkits (apps), with their managed-auth schemes.
+  list-tools           per_request  $0 per request
+    Discover Composio tools and their input schemas, optionally filtered by toolkit, search query, or exact slugs.
+
+dataforseo
+  backlinks-list           per_actual_cost metered at the provider's actual cost plus platform markup; free-tier pricing differs
+    List individual backlinks pointing at a target domain, subdomain, or URL. Free-tier pricing differs from paid-tier pricing.
+  backlinks-summary        per_actual_cost metered at the provider's actual cost plus platform markup; free-tier pricing differs
+    Get an aggregate backlink profile summary for a domain, subdomain, or URL. Free-tier pricing differs from paid-tier pricing.
+  bulk-keyword-difficulty  per_actual_cost metered at the provider's actual cost plus platform markup; free-tier pricing differs
+    Get keyword difficulty scores for up to 1000 keywords in one call. Free-tier pricing differs from paid-tier pricing.
+  competitors-domain       per_actual_cost metered at the provider's actual cost plus platform markup; free-tier pricing differs
+    Find competitor domains ranking for the same keywords as a target domain. Free-tier pricing differs from paid-tier pricing.
+  domain-rank-overview     per_actual_cost metered at the provider's actual cost plus platform markup; free-tier pricing differs
+    Get a domain's Google ranking distribution and estimated traffic overview. Free-tier pricing differs from paid-tier pricing.
+  keyword-overview         per_actual_cost metered at the provider's actual cost plus platform markup; free-tier pricing differs
+    Get search volume, competition, and intent data for a list of keywords. Free-tier pricing differs from paid-tier pricing.
+  keyword-suggestions      per_actual_cost metered at the provider's actual cost plus platform markup; free-tier pricing differs
+    Get keyword suggestions for a seed keyword from DataForSEO Labs. Free-tier pricing differs from paid-tier pricing.
+  llm-mentions             per_actual_cost metered at the provider's actual cost plus platform markup; free-tier pricing differs
+    Search LLM answers for mentions of target domains or keywords (AI visibility). Free-tier pricing differs from paid-tier pricing.
+  llm-models               per_request  $0 per request
+    List the model names available to dataforseo/llm-responses for a provider.
+  llm-responses            per_actual_cost metered at the provider's actual cost plus platform markup; free-tier pricing differs
+    Generate a live response from a commercial LLM (ChatGPT, Claude, Gemini, or Perplexity), optionally with web search, billed at provider token cost. Free-tier pricing differs from paid-tier pricing.
+  page-audit               per_actual_cost metered at the provider's actual cost plus platform markup; free-tier pricing differs
+    Run an instant on-page audit of a single URL without starting a crawl. Free-tier pricing differs from paid-tier pricing.
+  query                    per_actual_cost metered at the provider's actual cost plus platform markup; free-tier pricing differs
+    Send a single task to any allowlisted DataForSEO live endpoint under serp, keywords_data, dataforseo_labs, backlinks, or ai_optimization. Free-tier pricing differs from paid-tier pricing.
+  ranked-keywords          per_actual_cost metered at the provider's actual cost plus platform markup; free-tier pricing differs
+    List the keywords a domain or page ranks for in Google organic search. Free-tier pricing differs from paid-tier pricing.
+  referring-domains        per_actual_cost metered at the provider's actual cost plus platform markup; free-tier pricing differs
+    List referring domains linking to a target domain, subdomain, or URL. Free-tier pricing differs from paid-tier pricing.
+  related-keywords         per_actual_cost metered at the provider's actual cost plus platform markup; free-tier pricing differs
+    Get related keywords for a seed keyword from DataForSEO Labs. Free-tier pricing differs from paid-tier pricing.
+  search-volume            per_actual_cost metered at the provider's actual cost plus platform markup; free-tier pricing differs
+    Look up Google Ads search volume for up to 1000 keywords in one flat-rate request. Free-tier pricing differs from paid-tier pricing.
+  serp-google-organic      per_actual_cost metered at the provider's actual cost plus platform markup; free-tier pricing differs
+    Fetch a live Google organic SERP for a keyword in a given location and language. Free-tier pricing differs from paid-tier pricing.
+  site-audit-create        per_actual_cost metered at the provider's actual cost plus platform markup; free-tier pricing differs
+    Start an asynchronous site-audit crawl billed per crawled page; poll dataforseo/site-audit-status and fetch page details with dataforseo/site-audit-pages. Free-tier pricing differs from paid-tier pricing.
+  site-audit-pages         per_request  $0 per request
+    Fetch per-page audit results for a site-audit crawl by taskId.
+  site-audit-status        per_request  $0 per request
+    Poll a site audit's crawl summary by taskId; an audit still waiting for the crawler returns queued: true, and a finished crawl settles billing to the pages actually crawled.
+
+elevenlabs
+  create-agent                     per_request  paid tier: $0.013 per request; free tier: $0.04 per request
+    Create a private, caller-owned ElevenLabs agent with a prompt, voice, optional dynamic variable defaults, patient/normal/eager turn-taking, client tools and a maximum 600-second call duration. Free-tier pricing differs from paid-tier pricing.
+  delete-agent                     per_request  $0 per request
+    Delete a private agent owned by the caller in the same verified app scope.
+  generate-speech                  per_character paid tier: base $0.000065 per character (some inputs cost less or more); free tier: base $0.0002 per character (some inputs cost less or more)
+    Convert text to speech with an ElevenLabs voice, billed per character, returning the audio as a data URL. Free-tier pricing differs from paid-tier pricing.
+  generate-speech-with-timestamps  per_character paid tier: base $0.000065 per character (some inputs cost less or more); free tier: base $0.0002 per character (some inputs cost less or more)
+    Convert text to speech with an ElevenLabs voice, returning the audio as a data URL plus per-character timing alignments. Free-tier pricing differs from paid-tier pricing.
+  get-conversation-token           per_actual_cost metered at the provider's actual cost plus platform markup; free-tier pricing differs
+    Mint a private WebRTC conversation token with a server-bound session ID, reserving the session charge ceiling; settle with elevenlabs/settle-conversation. Free-tier pricing differs from paid-tier pricing.
+  get-signed-url                   per_actual_cost metered at the provider's actual cost plus platform markup; free-tier pricing differs
+    Mint a signed WebSocket URL for a Conversational AI session, reserving the session charge ceiling; settle with elevenlabs/settle-conversation. Free-tier pricing differs from paid-tier pricing.
+  list-voices                      per_request  paid tier: $0.0013 per request; free tier: $0.004 per request
+    List available ElevenLabs voices, with labels, preview URLs, and lifecycle fields. Free-tier pricing differs from paid-tier pricing.
+  settle-conversation              per_request  $0 per request
+    Settle a completed voice session using reported provider fiat cost, capped at its reservation; older calls without fiat data use the historical duration estimate. callDurationSeconds is elapsed time; billedMinutes is a legacy billing equivalent.
+
+email
+  send  per_request  $0.013 per request
+    Send a transactional email from DeepSpace Apps <notifications@updates.app.space>. Any from value is ignored; use reply_to for replies. Supports HTML or plain text, cc and bcc.
+
+exa
+  answer       per_actual_cost metered at the provider's actual cost plus platform markup
+    Get a cited answer to a question, generated from Exa search results.
+  contents     per_actual_cost metered at the provider's actual cost plus platform markup
+    Get page text, highlights, and summaries for a list of URLs.
+  findSimilar  per_actual_cost metered at the provider's actual cost plus platform markup
+    Find pages similar to a given URL, with optional content extraction.
+  news-search  per_actual_cost metered at the provider's actual cost plus platform markup
+    Search news articles via Exa, returning summarized results and ready-made headlines.
+  search       per_actual_cost metered at the provider's actual cost plus platform markup
+    Search the web with Exa neural search, with optional content extraction and filters.
+
+fal
+  get-model    per_request  $0 per request
+    Get a fal model's metadata, OpenAPI schema, and pricing, with a runnable flag covering fixed and compute-priced models.
+  get-result   per_request  $0 per request
+    Poll a fal run by request_id; on completion returns the model output and settles billing to fal's actual cost (an invalid run settles to 0).
+  list-models  per_request  $0 per request
+    Discover fal.ai models (image, video, audio), optionally filtered by query, category, or status.
+  run-model    per_actual_cost metered at the provider's actual cost plus platform markup; free-tier pricing differs
+    Start an asynchronous fixed- or compute-priced fal model; compute-priced runs use a $2 default/minimum reserve and every run settles to actual cost. Free-tier pricing differs from paid-tier pricing.
+
+finnhub
+  search-symbols  per_request  $0.0013 per request
+    Search stock symbols by name or ticker from Finnhub, optionally limited to one exchange (e.g. US).
+  stock-price     per_request  $0.0013 per request
+    Get a real-time stock quote for a ticker symbol from Finnhub.
+
+firecrawl
+  crawl      per_actual_cost metered at the provider's actual cost plus platform markup
+    Start an asynchronous crawl from a URL, billed per page crawled; poll firecrawl/get-crawl for progress and the scraped pages.
+  get-crawl  per_request  $0 per request
+    Poll a crawl by jobId; a terminal status returns the scraped pages and settles billing to the credits actually used.
+  map        per_actual_cost metered at the provider's actual cost plus platform markup
+    Map a website's URLs without scraping page content.
+  scrape     per_actual_cost metered at the provider's actual cost plus platform markup
+    Scrape a single URL and return its content in the requested formats, billed at the credits used.
+  search     per_actual_cost metered at the provider's actual cost plus platform markup
+    Search the web and return scraped content from the top results.
+
+gemini
+  generate-image  per_token    paid tier: base $39 per 1M tokens (some inputs cost less or more); free tier: base $120 per 1M tokens (some inputs cost less or more)
+    Generate images from a text prompt with a Gemini image model, returning data-URI images and token usage. Free-tier pricing differs from paid-tier pricing. Standard pricing applies to: gemini-2.5-flash-image.
+
+github
+  get-commit                   per_request  $0.0026 per request
+    Get a public repository commit with stats and changed files.
+  get-public-user              per_request  $0.0013 per request
+    Get a GitHub user's public profile by username.
+  get-pull-request             per_request  $0.0026 per request
+    Get a public repository pull request with full details.
+  get-pull-request-files       per_request  $0.0026 per request
+    List the files changed in a public repository pull request.
+  get-pull-request-reviews     per_request  $0.0026 per request
+    List reviews on a public repository pull request.
+  get-repository               per_request  $0.0013 per request
+    Get public repository metadata such as description, stars, forks, and default branch.
+  get-repository-commits       per_request  $0.0039 per request
+    List commits for a public repository, optionally from a specific branch or SHA.
+  get-repository-contents      per_request  $0.0026 per request
+    Get file or directory contents at a path in a public repository.
+  get-repository-contributors  per_request  $0.0039 per request
+    List public repository contributors with their commit counts.
+  get-repository-issues        per_request  $0.0039 per request
+    List issues for a public repository, filterable by state.
+  get-repository-languages     per_request  $0.0013 per request
+    Get the language breakdown for a public repository.
+  get-repository-pulls         per_request  $0.0039 per request
+    List pull requests for a public repository, filterable by state.
+  get-repository-readme        per_request  $0.0013 per request
+    Get a public repository's README file.
+  get-repository-tree          per_request  $0.0039 per request
+    Get a public repository's git tree at a ref, optionally recursive.
+  get-user                     per_request  $0.0013 per request
+    Direct account access is unavailable; use Composio GitHub with your own connection, or get-public-user for public profiles.
+  get-user-public-repos        per_request  $0.0026 per request
+    List a GitHub user's public repositories by username.
+  get-user-repos               per_request  $0.0026 per request
+    Direct account access is unavailable; use Composio GitHub with your own connection for private repositories, or get-user-public-repos for public repositories.
+  search-repositories          per_request  $0.0065 per request
+    Search public GitHub repositories with a query string.
+
+google
+  calendar-create-event  per_request  $0.013 per request [oauth]
+    Create a Google Calendar event with optional attendees, Meet link, and invite emails.
+  calendar-delete-event  per_request  $0.013 per request [oauth]
+    Delete a Google Calendar event by id.
+  calendar-list-events   per_request  $0.013 per request [oauth]
+    List Google Calendar events in a time range, expanded to single events.
+  calendar-update-event  per_request  $0.013 per request [oauth]
+    Patch fields of an existing Google Calendar event, preserving untouched properties.
+  contacts-list          per_request  $0.013 per request [oauth]
+    List the user's Google contacts with configurable person fields.
+  drive-get              per_request  $0.013 per request [oauth]
+    Get a Google Drive file's metadata by id.
+  drive-list             per_request  $0.013 per request [oauth]
+    List Google Drive file metadata, optionally filtered by a Drive query.
+  gmail-archive          per_request  $0.013 per request [oauth]
+    Archive a Gmail message or thread by removing it from the inbox.
+  gmail-get              per_request  $0.013 per request [oauth]
+    Get a single Gmail message by id with full content.
+  gmail-history-list     per_request  $0.013 per request [oauth]
+    List mailbox changes since a historyId watermark, for inbox sync and reply detection; a watermark older than about seven days returns 404 and the sync must re-bootstrap.
+  gmail-inbox            per_request  $0.013 per request [oauth]
+    List and hydrate inbox messages in one call, returning full messages ready to render; maxResults is capped server-side at 50.
+  gmail-labels-get       per_request  $0.013 per request [oauth]
+    Get a Gmail label by id, including accurate message and thread counts.
+  gmail-list             per_request  $0.013 per request [oauth]
+    List Gmail message ids, optionally filtered by labels or a search query.
+  gmail-mark-read        per_request  $0.013 per request [oauth]
+    Mark a Gmail message or thread as read.
+  gmail-mark-unread      per_request  $0.013 per request [oauth]
+    Mark a Gmail message or thread as unread.
+  gmail-modify           per_request  $0.013 per request [oauth]
+    Add or remove allowed system labels (UNREAD, INBOX, STARRED) on a message or thread.
+  gmail-profile          per_request  $0.013 per request [oauth]
+    Get the connected mailbox's profile: email address, message totals, and current historyId.
+  gmail-search           per_request  $0.013 per request [oauth]
+    Search Gmail messages using Gmail query syntax.
+  gmail-send             per_request  $0.013 per request [oauth]
+    Send an email from the connected Gmail account, with optional HTML body and reply threading.
+  gmail-star             per_request  $0.013 per request [oauth]
+    Star a Gmail message or thread.
+  gmail-thread-get       per_request  $0.013 per request [oauth]
+    Get every message in a Gmail conversation, oldest first, with headers and bodies.
+  gmail-trash            per_request  $0.013 per request [oauth]
+    Move a Gmail message or thread to Trash (recoverable, not a permanent delete).
+  gmail-unstar           per_request  $0.013 per request [oauth]
+    Remove the star from a Gmail message or thread.
+
+latex-compiler
+  compile  per_request  $0.0065 per request
+    Compile a LaTeX document or multi-file project to a base64 PDF with compilation logs; a failed compile returns compiled: false, not an error.
+
+linkedin
+  analyze-profile-url  per_request  $0.0325 per request
+    Look up a LinkedIn profile URL and return a normalized profile summary.
+  search-profiles      per_request  $0.0325 per request
+    Search LinkedIn profiles by name, company, title, or education via a scoped Google search; location only geographically refines those terms and cannot be searched alone.
+
+livekit
+  create-room     per_actual_cost metered at the provider's actual cost plus platform markup
+    Create a LiveKit room, reserving participant-minutes, and return an admin token.
+  delete-room     per_request  $0 per request
+    Delete one of the caller's LiveKit rooms by name.
+  generate-token  per_request  $0 per request
+    Generate a LiveKit participant access token for a room; the room auto-creates when the first participant joins with it. With agentName, the token dispatches that agent when this join creates the room (skipped if the room already exists, e.g. after create-room). Dispatch metadata is caller-supplied: agents must verify it.
+  list-rooms      per_request  $0 per request
+    List the caller's active LiveKit rooms (its app's rooms, or its own without an app).
+  settle-room     per_request  $0 per request
+    Settle a room's reserved billing down to the reported participant-minutes.
+
+mta
+  alerts      per_request  $0.0013 per request
+    Get current NYC Subway service alerts, optionally filtered by line.
+  arrivals    per_request  $0.0013 per request
+    Get arrivals for a subway line from the current real-time feed window (not filtered to upcoming only), optionally limited to one stop, sorted by arrival time.
+  feed        per_request  $0.0013 per request
+    Decode a real-time NYC Subway GTFS feed into trip updates, vehicle positions, and alerts with station names.
+  list-feeds  per_request  $0.0013 per request
+    List the available NYC Subway feeds and the lines each covers.
+
+nasa
+  apod        per_request  $0.013 per request
+    Get the Astronomy Picture of the Day, for a single date, a date range, or a random count.
+  cme         per_request  $0.013 per request
+    Get coronal mass ejection events from DONKI for a date range (defaults to the last 30 days).
+  flr         per_request  $0.013 per request
+    Get solar flare events from DONKI for a date range (defaults to the last 30 days).
+  gst         per_request  $0.013 per request
+    Get geomagnetic storm events from DONKI for a date range (defaults to the last 30 days).
+  neo-browse  per_request  $0.013 per request
+    Page through the overall near-Earth object dataset.
+  neo-feed    per_request  $0.013 per request
+    List near-Earth objects by closest-approach date over the 7 days from startDate (startDate defaults to today).
+  neo-lookup  per_request  $0.013 per request
+    Look up a single near-Earth asteroid by its NASA JPL small-body id.
+
+newsapi
+  search-everything  per_request  $0.0234 per request
+    Search news articles by keyword with date, language, domain, and sort filters, with ready-made headline strings.
+  top-headlines      per_request  $0.0234 per request
+    Get top news headlines by country, category, or source, with ready-made headline strings.
+
+openai
+  chat-completion  per_actual_cost metered at the provider's actual cost plus platform markup; free-tier pricing differs
+    Generate text with an OpenAI model via the Chat Completions API. Free-tier pricing differs from paid-tier pricing. Standard pricing applies to: gpt-5.6-luna, gpt-5.4-mini, gpt-5.4-nano, gpt-4o-mini, gpt-4.1-mini, gpt-4.1-nano.
+  generate-image   per_token    paid tier: base $52 per 1M tokens (some inputs cost less or more); free tier: base $160 per 1M tokens (some inputs cost less or more)
+    Generate images from a text prompt with an OpenAI image model, returning each image as a data URI (or the hosted URL when the API returns one) and token usage. Free-tier pricing differs from paid-tier pricing. Standard pricing applies to: gpt-image-1-mini.
+
+openai-realtime
+  create-session  per_actual_cost metered at the provider's actual cost plus platform markup; free-tier pricing differs
+    Mint a short-lived client token for a browser WebRTC voice session with OpenAI, reserving up to maxMinutes of per-minute billing. Free-tier pricing differs from paid-tier pricing.
+  settle-session  per_request  $0 per request
+    Settle a voice session's reserved billing down to the reported call duration at call end.
+
+openweathermap
+  current    per_request  $0.00195 per request
+    Get current weather for a location, flattened to temperature, conditions, wind, and sun times.
+  forecast   per_request  $0.00195 per request
+    Get a 5-day forecast in 3-hour steps for a location, each entry flattened to temperature and conditions.
+  geocoding  per_request  $0.00195 per request
+    Geocode a place name to candidate locations with coordinates.
+
+polymarket
+  comments       per_request  $0.0013 per request
+    Get community comments for a Polymarket event by event id.
+  event-detail   per_request  $0.0013 per request
+    Get a single Polymarket event by id, including its markets.
+  events         per_request  $0.0013 per request
+    List Polymarket prediction-market events, filterable by tag and closed status.
+  market-detail  per_request  $0.0013 per request
+    Get a single Polymarket market by its numeric market id.
+  markets        per_request  $0.0013 per request
+    List Polymarket prediction markets, filterable by tag, event slug, and closed status.
+  orderbook      per_request  $0.0013 per request
+    Get the CLOB order book of bids and asks for a Polymarket outcome token.
+  price          per_request  $0.0013 per request
+    Get the current CLOB price for a Polymarket outcome token, optionally for the buy or sell side.
+  price-history  per_request  $0.0013 per request
+    Get time-series price history for a Polymarket outcome token over a configurable interval.
+  prices         per_request  $0.0013 per request
+    Get current CLOB prices for multiple Polymarket outcome tokens in one call, all for one side (BUY by default).
+  search         per_request  $0.0013 per request
+    Search Polymarket events by keyword.
+  tags           per_request  $0.0013 per request
+    List the tags available for filtering Polymarket events and markets.
+  trades         per_request  $0.0013 per request
+    Get recent public trades for a Polymarket market by condition id, with a cursor for the next page; each trade names its outcome token.
+
+prospeo
+  account-information  per_request  $0 per request
+    Get Prospeo account information, including remaining credits.
+  bulk-enrich-company  per_actual_cost metered at the provider's actual cost plus platform markup
+    Enrich up to 50 companies in one synchronous call, settling billing to Prospeo's reported total credit cost.
+  bulk-enrich-person   per_actual_cost metered at the provider's actual cost plus platform markup
+    Enrich up to 50 people in one synchronous call, settling billing to Prospeo's reported total credit cost.
+  enrich-company       per_actual_cost metered at the provider's actual cost plus platform markup
+    Enrich a company profile by name, domain, or LinkedIn URL.
+  enrich-person        per_actual_cost metered at the provider's actual cost plus platform markup
+    Find a work email (verified only when only_verified_email is set) and optionally a mobile number for one person, settling billing to the credits Prospeo charges.
+  search-company       per_actual_cost metered at the provider's actual cost plus platform markup
+    Search Prospeo's company database with rich company filters, billed one credit per fresh results page.
+  search-person        per_actual_cost metered at the provider's actual cost plus platform markup
+    Search Prospeo's person database with rich person and company filters, billed one credit per fresh results page.
+  search-suggestions   per_request  $0 per request
+    Autocomplete canonical filter values (locations, titles, technologies, industries) for the search endpoints.
+
+scholar
+  get-author-details    per_request  $0.0325 per request
+    Get a Google Scholar author profile by author id via SerpApi — the profile view of the same author response get-author-papers returns.
+  get-author-papers     per_request  $0.0325 per request
+    List a Google Scholar author's papers by author id via SerpApi — the articles view of the same author response get-author-details returns.
+  get-citation-details  per_request  $0.0325 per request
+    Get citation formats for a Google Scholar result via SerpApi.
+  search-papers         per_request  $0.0325 per request
+    Search Google Scholar papers via SerpApi, with year-range filters. Each result's publication_info.authors carries the author_id that scholar/get-author-details and scholar/get-author-papers take.
+
+serpapi
+  events          per_request  $0.0325 per request
+    Search Google Events listings via SerpApi.
+  flights         per_request  $0.0325 per request
+    Search Google Flights itineraries, one-way or round-trip, via SerpApi.
+  hotels          per_request  $0.0325 per request
+    Search Google Hotels availability for a stay via SerpApi.
+  places-reviews  per_request  $0.0325 per request
+    Get Google Maps reviews for a place via SerpApi.
+  places-search   per_request  $0.0325 per request
+    Search Google Maps places via SerpApi.
+  search          per_request  $0.0325 per request
+    Run a SerpApi search against any supported engine (Google by default).
+  web-search      per_request  $0.0325 per request
+    Run a Google web search via SerpApi, with pagination and locale options.
+
+shotstack
+  get-render  per_request  $0 per request
+    Poll a render by id; a terminal status returns the temporary result URL and settles billing to the actual rendered length.
+  render      per_actual_cost metered at the provider's actual cost plus platform markup; free-tier pricing differs
+    Submit a JSON edit (timeline plus output spec) for asynchronous video rendering, billed per rendered second; poll shotstack/get-render. Free-tier pricing differs from paid-tier pricing.
+
+slack
+  channel-history  per_request  $0.0013 per request
+    Get message history for a Slack channel, with cursor and time-range paging.
+  list-channels    per_request  $0.0013 per request
+    List Slack channels visible to the caller-supplied access token.
+  send-message     per_request  $0.013 per request
+    Send a message to a Slack channel, optionally threaded or with Block Kit blocks.
+  team-info        per_request  $0.0013 per request
+    Get workspace details for the Slack team behind the supplied access token.
+
+speech
+  speech-to-text  per_actual_cost metered at the provider's actual cost plus platform markup
+    Transcribe base64-encoded audio to text with OpenAI Whisper-family models, settling billing to provider-reported duration or token usage.
+  text-to-speech  per_token    base $19500 per 1M tokens (some inputs cost less or more)
+    Convert text to spoken audio with OpenAI TTS, returned as a base64 data URI; billed per 1,000 input characters. The ballad, verse, marin and cedar voices and delivery instructions need gpt-4o-mini-tts.
+
+twitterapi
+  article                    per_actual_cost metered at the provider's actual cost plus platform markup
+    Get the full body of an X Article (long-form post) by its tweet id.
+  check-follow-relationship  per_actual_cost metered at the provider's actual cost plus platform markup
+    Check whether one screen name follows, or is followed by, another.
+  community-info             per_actual_cost metered at the provider's actual cost plus platform markup
+    Get an X Community's profile (topic, rules, member count, creator, admin) by community id.
+  community-members          per_actual_cost metered at the provider's actual cost plus platform markup
+    List an X Community's members with profiles, 20 per page.
+  community-moderators       per_actual_cost metered at the provider's actual cost plus platform markup
+    List an X Community's moderators with profiles, 20 per page.
+  community-tweets           per_actual_cost metered at the provider's actual cost plus platform markup
+    Get an X Community's tweets, newest first, 20 per page.
+  list-followers             per_actual_cost metered at the provider's actual cost plus platform markup
+    List the profiles following an X list, 20 per page.
+  list-members               per_actual_cost metered at the provider's actual cost plus platform markup
+    List an X list's members with profiles, 20 per page.
+  list-tweets                per_actual_cost metered at the provider's actual cost plus platform markup
+    Get an X list's tweet timeline, about 100 tweets per page.
+  search-community-tweets    per_actual_cost metered at the provider's actual cost plus platform markup
+    Keyword-search tweets across all X Communities, Latest or Top, up to 20 per page.
+  search-tweets              per_actual_cost metered at the provider's actual cost plus platform markup
+    Search tweets with X advanced-search operators (from:, since_time:, min_faves:, lang:, ...), Latest or Top, up to 20 per page.
+  search-users               per_actual_cost metered at the provider's actual cost plus platform markup
+    Search public X profiles by keyword, one page per call.
+  trends                     per_actual_cost metered at the provider's actual cost plus platform markup
+    Get trending topics for a location by WOEID (1 = worldwide, 23424977 = United States), 30 to 50 per call, billed per trend.
+  tweet-quotes               per_actual_cost metered at the provider's actual cost plus platform markup
+    Get quote tweets of a tweet, newest first, 20 per page.
+  tweet-replies              per_actual_cost metered at the provider's actual cost plus platform markup
+    Get replies to an original tweet, newest first, up to 20 per page, optionally within a time window.
+  tweet-replies-v2           per_actual_cost metered at the provider's actual cost plus platform markup
+    Get replies to a tweet sorted by Relevance, Latest, or Likes, up to 20 per page.
+  tweet-retweeters           per_actual_cost metered at the provider's actual cost plus platform markup
+    List the profiles that retweeted a tweet, newest first, one page per call.
+  tweet-thread               per_actual_cost metered at the provider's actual cost plus platform markup
+    Get the full thread around a tweet (ancestors and replies); page size is set by X, not the caller.
+  tweets-by-ids              per_actual_cost metered at the provider's actual cost plus platform markup
+    Get up to 100 tweets in one call by tweet id.
+  user-about                 per_actual_cost metered at the provider's actual cost plus platform markup
+    Get an X profile's About panel (account location, join source, username change count) by screen name.
+  user-follower-ids          per_actual_cost metered at the provider's actual cost plus platform markup
+    List a user's follower ids only, up to 5000 per page, for cheap large-scale graph collection.
+  user-followers             per_actual_cost metered at the provider's actual cost plus platform markup
+    List a user's followers with full profiles, newest first, 20 to 200 per page (larger pages cost less per profile).
+  user-followings            per_actual_cost metered at the provider's actual cost plus platform markup
+    List the accounts a user follows with full profiles, newest first, 20 to 200 per page.
+  user-info                  per_actual_cost metered at the provider's actual cost plus platform markup
+    Get a public X profile (bio, counts, verification, pinned tweets) by screen name; an unknown name returns status "error" and is still billed.
+  user-mentions              per_actual_cost metered at the provider's actual cost plus platform markup
+    Get tweets mentioning a screen name, newest first, 20 per page, optionally within a time window.
+  user-timeline              per_actual_cost metered at the provider's actual cost plus platform markup
+    Get a user's profile timeline in profile order (pinned first), up to 20 per page, by user id.
+  user-tweets                per_actual_cost metered at the provider's actual cost plus platform markup
+    Get a user's latest tweets newest first, up to 20 per page, by user id or screen name.
+  user-verified-followers    per_actual_cost metered at the provider's actual cost plus platform markup
+    List a user's verified followers, newest first, 20 per page, by numeric user id.
+  users-by-ids               per_actual_cost metered at the provider's actual cost plus platform markup
+    Get up to 100 public X profiles in one call by numeric user id.
+
+websearch
+  advanced-search  per_request  $0.1339 per request
+    Run a multi-engine web, image, video, or academic search with normalized assets; web searches return an AI summary with citations, image/video/academic searches a canned result-count summary.
+
+wikipedia
+  get-page-content  per_request  $0.0013 per request
+    Get a Wikipedia article's full rendered HTML by title.
+  get-page-summary  per_request  $0.0013 per request
+    Get a Wikipedia article's summary extract by title.
+  get-random-page   per_request  $0.0013 per request
+    Get the summary of a random Wikipedia article.
+  search-pages      per_request  $0.0013 per request
+    Search English Wikipedia articles, returning normalized results with plain-text excerpts.
+
+youtube
+  get-trending-videos  per_request  $0.013 per request
+    Get trending YouTube videos, optionally for a region.
+  get-video-details    per_request  $0.0065 per request
+    Get snippet, statistics, and duration details for a YouTube video by id.
+  search-videos        per_request  $0.013 per request
+    Search YouTube videos, returning results enriched with watch, embed, and thumbnail links.
+
