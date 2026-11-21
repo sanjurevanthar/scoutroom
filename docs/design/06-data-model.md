@@ -111,7 +111,7 @@ Read: **owner only** (a custom server action returns the link; the code is never
 | error | text | plain-words reason when `failed` |
 | jobId | text | the background job id (Plan A only) |
 | plan | select | `job` (Plan A) / `action` (Plan B), see [07](07-agent-run-design.md) |
-| llmProvider, searchProvider | text | names of the providers used, e.g. `grok`, `openalex+wikipedia` (audit and later cost review) |
+| llmProvider, searchProvider | text | names of the providers used, e.g. `groq`, `openalex+wikipedia` (audit and later cost review) |
 | inputTokens, outputTokens | number | from the LLM response if available |
 
 ### `run_steps`

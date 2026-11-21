@@ -21,9 +21,9 @@
 | T-13 | **Stop** | e2e | Stop ends the run as `stopped` after the current step; lock released. |
 | T-14 | **Vote rules** | API | One vote per person per card; changing a vote does not double count. |
 | T-15 | **Invites** | API | Expired / revoked code refused; invite cannot make an owner. |
-| T-16 | **Provider contract** | unit | Each `LLMProvider` and `SearchProvider` (fake, Grok, OpenAlex, Wikipedia, later DeepSpace) returns the agreed shape; `SearchHit.url` is `https`; an adapter never leaks vendor fields. |
+| T-16 | **Provider contract** | unit | Each `LLMProvider` and `SearchProvider` (fake, Groq, OpenAlex, Wikipedia, later DeepSpace) returns the agreed shape; `SearchHit.url` is `https`; an adapter never leaks vendor fields. |
 | T-17 | **Provider switch** | unit/API | Changing `LLM_PROVIDER` / `SEARCH_PROVIDER` picks the right class with no agent change; an unknown value fails at startup. |
-| T-18 | **Missing key** | API | With no xAI key set, `startRun` refuses early; no run and no lock are created. |
+| T-18 | **Missing key** | API | With no `GROQ_API_KEY` set, `startRun` refuses early; no run and no lock are created. |
 | T-19 | **Key never leaks** | unit | The key does not appear in logs, run records, error messages or any response. |
 | T-20 | **Plan B pipeline** | API | If built: one action creates 4 steps and cards, honors the lock and `stopRequested`. |
 | T-21 | **Kept rule** | unit | keeps > rejects and keeps >= 1 means kept; ties and zero votes stay open. |
@@ -53,4 +53,4 @@ For T-8 to T-11, the provider calls are replaced by a fake (a fast stub) so test
 - [ ] (If built) Write brief: every `[n]` links to a kept card.
 - [ ] `npx deepspace logs` shows no errors; `npx deepspace app usage` shows spend is small.
 - [ ] **Seeded demo room (Sunday):** a room with a real question, a finished run, ~8 cards and a few votes, created before the demo as a backup if search, the AI provider or the network is slow.
-- [ ] xAI key is in the secrets store (not in git); the spending limit is set in the xAI console.
+- [ ] `GROQ_API_KEY` and `OPENALEX_MAILTO` are in the secrets store (not in git); Groq free-tier rate limits are known (no spending limit needed).

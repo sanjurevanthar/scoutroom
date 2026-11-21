@@ -1,6 +1,6 @@
 # 08 · Providers and Integrations
 
-> **In simple words:** The agent needs an AI model and a search source. The owner's DeepSpace account has 0 credits, so for now we use the owner's own xAI (Grok) key and two free search sources. The agent only talks to two small interfaces, so later we can switch to DeepSpace's Anthropic, Exa and Scholar integrations by changing a setting, with no change to the agent code.
+> **In simple words:** The agent needs an AI model and a search source. The owner's DeepSpace account has 0 credits, so for now we use the owner's own Groq key and two free search sources. The agent only talks to two small interfaces, so later we can switch to DeepSpace's Anthropic, Exa and Scholar integrations by changing a setting, with no change to the agent code.
 
 All AI and search calls run on the **server**. Never in the browser.
 
@@ -41,7 +41,7 @@ Rules: adapters **normalize** vendor output into these shapes. The agent, valida
 
 | Interface | Now (**[THIS BUILD]**) | Later (**[FUTURE]**, one config change) |
 |---|---|---|
-| `LLMProvider` | `GrokProvider`: xAI API with the owner's key | `DeepSpaceAnthropicProvider`: `anthropic/chat-completion` (Haiku) |
+| `LLMProvider` | `GroqProvider`: Groq API (OpenAI-compatible, `https://api.groq.com/openai/v1`) with the owner's key | `DeepSpaceAnthropicProvider`: `anthropic/chat-completion` (Haiku) |
 | `SearchProvider` (papers) | `OpenAlexProvider`: OpenAlex Works search (free) | `ScholarProvider`: `scholar/search-papers` |
 | `SearchProvider` (web) | `WikipediaProvider`: Wikipedia search (free) | `ExaProvider`: `exa/search` |
 
@@ -51,22 +51,22 @@ Two **non-secret** settings in the worker config (`wrangler.toml` `[vars]`), rea
 
 | Setting | Values | Default |
 |---|---|---|
-| `LLM_PROVIDER` | `grok` / `deepspace` | `grok` |
+| `LLM_PROVIDER` | `groq` / `deepspace` | `groq` |
 | `SEARCH_PROVIDER` | `free` / `deepspace` | `free` |
 
-The **secret** (the xAI key) lives only in the DeepSpace secrets store (`npx deepspace secrets set ...`), never in `wrangler.toml`, code, `.dev.vars` committed files, or git. If the chosen provider's secret is missing, `startRun` refuses early (see [07](07-agent-run-design.md)).
+The **secret** (`GROQ_API_KEY`; also `OPENALEX_MAILTO` for OpenAlex polite use) lives only in the DeepSpace secrets store (`npx deepspace secrets set ...`), never in `wrangler.toml`, code, `.dev.vars` committed files, or git. If the chosen provider's secret is missing, `startRun` refuses early (see [07](07-agent-run-design.md)).
 *Sources: https://docs.deep.space/concepts/deployment#secrets-come-from-the-store-not-from-dev-vars, https://docs.deep.space/cli-reference/commands#secrets.*
 
-The two settings are independent: you can use Grok with DeepSpace search, or the reverse.
+The two settings are independent: you can use Groq with DeepSpace search, or the reverse.
 
 ## Providers used now
 
-### `GrokProvider` (xAI)
+### `GroqProvider` (Groq)
 - **Why:** plan searches, write cards as JSON, write the brief (F4).
-- **How:** HTTPS call from the worker to xAI's chat completions API with the owner's key in the `Authorization` header (server only). Exact base URL, model id and JSON-mode support: **T13, T14**.
+- **How:** HTTPS call from the worker to Groq's OpenAI-compatible chat completions API (`https://api.groq.com/openai/v1`) with the owner's key in the `Authorization` header (server only). Exact base URL, model id and JSON-mode support: **T13, T14**.
 - **Output:** the model text, plus token usage if returned.
-- **Cost:** billed to the **owner's xAI account**. Prices: TO VERIFY.
-- **If it fails:** retry once with backoff; then fail the run.
+- **Cost:** free tier: **rate limits, not a bill** (requests and tokens per minute/day). HTTP 429 is expected under load.
+- **If it fails:** on HTTP 429 retry with short backoff (honor `retry-after`, max 2-3 tries); if still limited, show "rate limited, try again" in the run status and end the run cleanly. Other errors: retry once, then fail the run.
 
 ### `OpenAlexProvider` (papers)
 - **Why:** research papers, free, no key. (OpenAlex asks polite clients to identify themselves; whether to send a contact address, and which one, is an open question for you: Q11. We will **not** commit a personal email.)
@@ -85,7 +85,7 @@ Facts from `npx deepspace integrations info <name>` (full list saved in `docs/ca
 
 | Integration | Replaces | Input (from `info`) | Cost (from catalog) |
 |---|---|---|---|
-| `anthropic/chat-completion` | `GrokProvider` | `model` (default `claude-opus-5-5`), `max_tokens`, `messages`, `system`, `temperature` | metered at actual cost plus markup; standard pricing for `claude-haiku-5-5` |
+| `anthropic/chat-completion` | `GroqProvider` | `model` (default `claude-opus-5-5`), `max_tokens`, `messages`, `system`, `temperature` | metered at actual cost plus markup; standard pricing for `claude-haiku-5-5` |
 | `exa/search` | `WikipediaProvider` | `query`, `numResults`, `type`, `category`, domain and date filters | metered at actual cost plus markup |
 | `scholar/search-papers` | `OpenAlexProvider` | `q`, `num`, `start`, `hl`, `as_ylo`, `as_yhi` | **$0.0325 per request** |
 

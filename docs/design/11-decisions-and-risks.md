@@ -1,6 +1,6 @@
 # 11 · Decisions, Risks and Open Questions
 
-> **In simple words:** This page lists the main choices we made and why, what could go wrong with a plan B, the facts I could not confirm (TO VERIFY), and the answers you already gave. The biggest tradeoff: with no DeepSpace credits, AI and search sit behind provider interfaces that use your xAI key and free sources. The core still uses DeepSpace.
+> **In simple words:** This page lists the main choices we made and why, what could go wrong with a plan B, the facts I could not confirm (TO VERIFY), and the answers you already gave. The biggest tradeoff: with no DeepSpace credits, AI and search sit behind provider interfaces that use your Groq key (free tier) and free sources. The core still uses DeepSpace.
 
 ## The main tradeoff
 
@@ -10,7 +10,7 @@
 |---|---|---|
 | Provider interfaces (`LLMProvider`, `SearchProvider`) | We can build and demo now. Switching to DeepSpace `anthropic`, `exa`, `scholar` later is two config values (`LLM_PROVIDER`, `SEARCH_PROVIDER`). | One more layer to write and test. Fewer "built-in DeepSpace" points for AI and search. |
 | Free sources (OpenAlex, Wikipedia) | No search cost. | Weaker web coverage than Exa; many cards will be papers or background facts. |
-| Owner's xAI key | Works today. | The owner pays for every run and must guard the key (see D10). |
+| Owner's Groq key (free tier) | Works today, no bill. | Rate limits (HTTP 429) instead of cost; the owner must still guard the key (see D10). |
 | DeepSpace for everything else | Auth, RBAC, records, live sync, presence, jobs, secrets, deploy, logs, tests stay real DeepSpace. | None. |
 
 ## Answers you gave (now in the docs)
@@ -18,7 +18,7 @@
 | # | Your answer | Where it landed |
 |---|---|---|
 | Q1 | Job if the spike confirms T2-T6; else one action with a fixed pipeline. Document both. | [07](07-agent-run-design.md) (Plan A, Plan B, Spike) |
-| Q2 | `LLMProvider` (Grok now, DeepSpace Haiku later) and `SearchProvider` (OpenAlex + Wikipedia now, Exa + Scholar later), chosen by env setting. | [08](08-integrations.md), D8 |
+| Q2 | `LLMProvider` (Groq now, DeepSpace Haiku later) and `SearchProvider` (OpenAlex + Wikipedia now, Exa + Scholar later), chosen by env setting. | [08](08-integrations.md), D8 |
 | Q3 | Default run limit 5 per room. | [06](06-data-model.md), [07](07-agent-run-design.md) |
 | Q4 | Owner's AI key pays. Recorded as a tradeoff. | D10 below |
 | Q5 | Invites by link. | D7 |
@@ -71,9 +71,9 @@
 - **Why:** these facts are not in the docs, and a wrong guess would cost far more than half a day.
 
 ### D10 · The owner's AI key pays for all runs
-- **Decision:** every run uses the owner's xAI key (one shared key in the secrets store).
+- **Decision:** every run uses the owner's Groq key (`GROQ_API_KEY`) (one shared key in the secrets store).
 - **Why:** simplest and works now; researchers need no accounts or keys.
-- **Tradeoff:** the owner carries all cost and the key is a high-value secret. Controls: run limit (5 per room), hard caps per run, secret only in the store, never logged, and a provider-side spending limit set in the xAI console (recommended; please set one). If a room is abused, the owner can lower `runLimit` to 0 or rotate the key.
+- **Tradeoff:** the owner carries all cost and the key is a high-value secret. Controls: run limit (5 per room), hard caps per run, secret only in the store, never logged, and free-tier rate limits (Groq returns 429; no spending limit needed). If a room is abused, the owner can lower `runLimit` to 0 or rotate the key.
 
 ## Risks and plan B
 
@@ -82,10 +82,10 @@
 | R1 | `team` reads do not work with our `team_members` shape (T2) | medium | Use `collaboratorsField` (JSON array of user ids) on each record; or one `RecordRoom` scope per room. |
 | R2 | Job queue runs one job at a time for the **whole app** (T5) | medium | Accept for the demo; else a job room per ScoutRoom or shorter steps. |
 | R3 | Job path fails the spike (T4, T6) | medium | Plan B: one action, fixed pipeline. |
-| R4 | Grok does not return clean JSON (T14) | medium | zod validation; repair call (Plan A); stricter prompt; fall back to a different model id. |
+| R4 | Groq model does not return clean JSON (T14) | medium | zod validation; repair call (Plan A); stricter prompt; fall back to a different model id. |
 | R5 | Free sources give weak or irrelevant results | high | Show results transparently in steps; humans vote; switch to Exa + Scholar when credits exist. |
 | R6 | Free API rate limits or downtime (OpenAlex, Wikipedia) | medium | Retry once, skip the failed query, keep going; demo from the seeded room. |
-| R7 | xAI key leaks or runs up cost | low | Secrets store only; provider spending limit; redaction + pre-commit scan; rotate key. |
+| R7 | Groq key leaks, or free-tier rate limits (429) stall runs | low | Secrets store only; 429 retry/backoff and "rate limited, try again" status; redaction + pre-commit scan; rotate key. |
 | R8 | Deadline (Sunday night) | high | Cut F4 first. Then simplify invites to one researcher link. Demo from a seeded room. |
 | R9 | AI returns weak or empty cards | medium | Repair call (Plan A); show "no usable cards" with the steps. |
 | R10 | Prompt injection works partly | medium | Humans vote; LLM has no tools; URL allowlist (see 09). |
@@ -106,16 +106,17 @@
 | T9 | Exact response fields of the DeepSpace integrations | Later switch only | `npx deepspace integrations invoke` once each (needs credits) |
 | T11 | Size limit and behavior of `ctx.continue(state)` | Step loop | Docs + spike |
 | T12 | How to create test accounts for two-user tests | Testing | `npx deepspace test accounts --help` |
-| T13 | xAI base URL, current model id, and token pricing | `GrokProvider` | xAI docs / console |
-| T14 | Whether the chosen Grok model supports a JSON output mode | JSON reliability | xAI docs; test |
+| T13 | Outbound `fetch` from server code / job handler to OpenAlex, Wikipedia, Groq (Groq base URL `https://api.groq.com/openai/v1`; pick a free-tier model id) | `GroqProvider` | Spike |
+| T14 | Whether the chosen Groq model supports a JSON output mode | JSON reliability | Groq docs; test |
 | T15 | OpenAlex and Wikipedia response fields, rate limits, and polite-use rules | Adapters | Call each once from a script |
 | T16 | Outbound `fetch` to non-DeepSpace hosts from the worker is allowed | Free providers | Spike (same as T6) |
 
-## Open questions left for you
+## Answers to the open questions (session 02)
 
-| # | Question | My default |
+| # | Answer | Effect |
 |---|---|---|
-| Q11 | OpenAlex likes a contact address for polite use. Send one? If yes, use a **project** address held in a setting, never your personal one in git. | Send none to start; add only if rate-limited. |
-| Q12 | Set a spending limit in the xAI console (D10)? | Yes, strongly recommended. |
-| Q13 | Is T5 (single job queue per app) a blocker, or acceptable for the demo? | Acceptable. |
-| Q14 | Wikipedia as the only "web" source is weak. Add one more free web source later, or accept it? | Accept for now. |
+| T5 | Non-blocking. One job queue per app is fine for the demo. | R2 accepted. |
+| Q11 | Yes, send OpenAlex a `mailto`, read from the env setting `OPENALEX_MAILTO` (set via `npx deepspace secrets`). Never in code or git. | `OpenAlexSearch` reads `env.OPENALEX_MAILTO`. |
+| Q12 | No spending limit needed on Groq's free tier. **Risk:** rate limits (HTTP 429), handled by short retry/backoff and a "rate limited, try again" run status. | R7 updated. |
+| Q13 | A single job queue is acceptable for the demo. | R2 accepted. |
+| Q14 | Accept Wikipedia for now. Label its cards **"background"** with lower confidence. | Card `sourceName=Wikipedia` shows a "background" label. |

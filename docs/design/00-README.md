@@ -15,7 +15,7 @@ Tags used everywhere: **[THIS BUILD]** (due Sunday night) and **[FUTURE]** (docu
 | 05 | [Architecture](05-architecture.md) | Components, which DeepSpace service does what, code layout |
 | 06 | [Data model](06-data-model.md) | Collections, fields, relations, example record |
 | 07 | [Agent run design](07-agent-run-design.md) | The core feature: steps, status, JSON format, budget, failures |
-| 08 | [Providers and integrations](08-integrations.md) | LLM and search interfaces; Grok + OpenAlex + Wikipedia now, DeepSpace later; what is left out |
+| 08 | [Providers and integrations](08-integrations.md) | LLM and search interfaces; Groq + OpenAlex + Wikipedia now, DeepSpace later; what is left out |
 | 09 | [Security and privacy](09-security-and-privacy.md) | Secrets, server checks, prompt injection, stored data |
 | 10 | [Testing plan](10-testing-plan.md) | What we test, how, and a demo-day checklist |
 | 11 | [Decisions and risks](11-decisions-and-risks.md) | Key decisions, risks, **TO VERIFY list**, **open questions** |
@@ -29,7 +29,7 @@ Also in `docs/`: `catalog-features.txt` and `catalog-integrations.txt` (saved De
 2. `startRun` (a server action) checks role, budget and a lock, then enqueues a **background job** (Plan A). If a short spike shows that path does not work, one action runs a fixed pipeline instead (Plan B).
 3. The job does **one step at a time** (plan, search up to 8 times, write cards), saving each step as a record.
 4. The browser just subscribes to those records, so everyone sees steps and cards **live**.
-5. AI and search sit behind two interfaces. Now: the owner's xAI key (Grok) plus OpenAlex and Wikipedia, because DeepSpace credits are 0. Later: DeepSpace `anthropic`, `exa`, `scholar` by changing a setting. All calls happen on the server. The one secret lives in the DeepSpace secrets store, never in the browser or git.
+5. AI and search sit behind two interfaces. Now: the owner's Groq key plus OpenAlex and Wikipedia, because DeepSpace credits are 0. Later: DeepSpace `anthropic`, `exa`, `scholar` by changing a setting. All calls happen on the server. The one secret lives in the DeepSpace secrets store, never in the browser or git.
 
 ## Glossary
 
@@ -53,7 +53,7 @@ Also in `docs/`: `catalog-features.txt` and `catalog-integrations.txt` (saved De
 | **Spike** | A short throwaway test to answer risky questions before the real build. |
 | **Plan A / Plan B** | A: the run is a background job. B: the run is one server action with a smaller fixed pipeline. |
 | **OpenAlex / Wikipedia** | Free search sources (papers / general background) used until DeepSpace credits exist. |
-| **xAI / Grok** | The AI model provider used now, with the owner's key. |
+| **Groq** | The AI model provider used now (OpenAI-compatible API, free tier with rate limits), with the owner's key. |
 | **Subscription / live query** | `useQuery` keeps a live connection; the server pushes changes, so no refresh is needed. |
 | **Presence** | Showing who is online. |
 | **Evidence card** | One claim + a source link + source type + confidence. |

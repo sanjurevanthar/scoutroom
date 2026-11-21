@@ -173,4 +173,4 @@ A card is **`kept`** when `keepCount > rejectCount` **and** `keepCount >= 1`. It
 
 ## TO VERIFY
 
-T1 server-action time limit. T3 lock. T4 `enqueueJob` while client writes are denied. T5 one job queue per app. T6 job handler can write records and make outbound calls. T11 size and behavior of `ctx.continue` state. T13-T16 provider facts (xAI model id, JSON mode, OpenAlex and Wikipedia fields, outbound `fetch` from the worker). See [11-decisions-and-risks.md](11-decisions-and-risks.md).
+T1 server-action time limit. T3 lock. T4 `enqueueJob` while client writes are denied. T5 one job queue per app. T6 job handler can write records and make outbound calls. T11 size and behavior of `ctx.continue` state. T13-T16 provider facts (Groq model id, JSON mode, OpenAlex and Wikipedia fields, outbound `fetch` from the worker). See [11-decisions-and-risks.md](11-decisions-and-risks.md).

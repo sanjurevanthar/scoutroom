@@ -57,7 +57,7 @@ Small teams (2-10 people) making a tech or product choice, who want AI speed but
 
 ## AI and search providers (decided)
 
-DeepSpace credits are 0 for now, so the agent uses two small interfaces. **Now:** Grok (owner's xAI key) + OpenAlex + Wikipedia. **Later:** DeepSpace `anthropic`, `exa`, `scholar`, by changing a setting. See [08-integrations.md](08-integrations.md).
+DeepSpace credits are 0 for now, so the agent uses two small interfaces. **Now:** Groq (owner's `GROQ_API_KEY`) + OpenAlex + Wikipedia. **Later:** DeepSpace `anthropic`, `exa`, `scholar`, by changing a setting. See [08-integrations.md](08-integrations.md).
 
 ## Left out on purpose
 
