@@ -102,7 +102,7 @@
 | R8 | Deadline (Sunday night) | high | Cut F4 first. Then simplify invites to one researcher link. Demo from a seeded room. |
 | R9 | AI returns weak or empty cards | medium | Repair call (Plan A); show "no usable cards" with the steps. |
 | R10 | Prompt injection works partly | medium | Humans vote; LLM has no tools; URL allowlist (see 09). |
-| R11 | Lock stays stuck after a crash | low | `expiresAt` rescue in `startRun`. Reviewed in session 09a: the run record also stays `running` and the UI stays blocked, so this is more than low; see [13](13-reliability.md) issue 1 (fix in 09b). |
+| R11 | Lock stays stuck after a crash | low (was under-rated; now fixed) | `expiresAt` rescue in `startRun`. Reviewed in session 09a: the run record also stays `running` and the UI stays blocked, so this is more than low; fixed in 09b with a heartbeat and a lazy reaper in `startRun`, see [13](13-reliability.md) issue 1. |
 | R12 | A person who is in about 100 or more rooms breaks live reads: the SDK's `team` read query uses one SQL `?` per room and hits SQLite's 100-variable limit ("too many SQL variables", page stuck on "Connecting..."). Found in the session 06 review: it made e2e tests flaky because the test accounts kept every room they created. | low for real users, high for test accounts | Tests now run on fresh, throwaway storage (`vite.config.ts`). For real users: add a way to leave or delete rooms, or cap rooms per user. Not built. |
 | R13 | Run reliability gaps: lock lifetime, no transaction in `startRun`, half-saved cards, retries that never fire, quota not refunded | medium | Documented with options and checks in [13](13-reliability.md); issue 1 fixed first, the rest future. |
 

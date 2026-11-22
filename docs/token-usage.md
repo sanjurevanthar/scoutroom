@@ -1,6 +1,6 @@
 # Token usage
 
-Real numbers for sessions 00-07, from Claude Code's local logs via `npx ccusage session --json`. No number below is estimated by hand. Collected 2026-11-22.
+Real numbers for sessions 00-07 (the Total row still covers sessions 00-07 only; rows 09a and 09b were added later and are not in it), from Claude Code's local logs via `npx ccusage session --json`. No number below is estimated by hand. Collected 2026-11-22.
 
 | Session | Date | Feature | Input tokens | Output tokens | Cache read | Cache write | Est. cost | What saved / wasted tokens |
 |---|---|---|---:|---:|---:|---:|---:|---|
@@ -12,6 +12,8 @@ Real numbers for sessions 00-07, from Claude Code's local logs via `npx ccusage 
 | 05 | 2026-11-22 | Feature 3: votes | 126 | 25,907 | 5,849,522 | 105,697 | $1.27 | saved: fake providers only, no real API calls. wasted: 9 Monitor calls and other sleep/poll waits (12 poll-style calls in all) on test runs; most API calls of any session (53) |
 | 06 | 2026-11-22 | Independent review of PR #1 | 70 | 22,713 | 3,154,096 | 88,867 | $0.90 | saved: review-only scope; fixed R1 (rooms piling up in test storage), the cause of the flaky reruns. wasted: 3 full green runs required, plus 6 sleep/poll commands |
 | 07 | 2026-11-22 | Feature 4: brief | 70 | 41,304 | 4,156,580 | 134,556 | $1.37 | saved: foreground test runs (0 Monitor or sleep calls) and reuse of the existing kept-card rule. wasted: 9 design docs updated in one session (peak context ~162k) |
+| 09a | 2026-11-22 | Reliability document (docs only) | 26 | 13,991 | 935,375 | 75,830 | $0.54 | saved: docs-only scope, no test runs. wasted: not measured |
+| 09b | 2026-11-22 | Fix stuck runs (issue 1) | 50 | 24,777 | 2,485,471 | 101,086 | $0.90 | snapshot taken before the docs and PR steps finished: fill the final row after the session. Test runs were foreground (0 Monitor or sleep shell calls) |
 | **Total** | | | **578** | **316,275** | **29,231,496** | **1,133,624** | **$10.62** | |
 
 **I use a Claude Pro subscription, so this is an estimate of the API cost, not money spent.** "Est. cost" is ccusage's API-equivalent price for the tokens in each row.

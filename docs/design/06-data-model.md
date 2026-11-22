@@ -110,6 +110,7 @@ Read: **owner only** (a custom server action returns the link; the code is never
 | toolCallsUsed | number | LLM and search calls together, hard cap 8 per run |
 | error | text | plain-words reason when `failed` |
 | startedBy | text | user id |
+| lastProgressAt | number | heartbeat, ms since epoch. Set when the run is created, when a step begins and ends, and on every tool call. `startRun` uses it to tell a live run from a dead one (the stale rule in [07](07-agent-run-design.md#stuck-runs-the-stale-rule-and-the-reaper)). Optional: runs created before this field existed have none and are never judged stale |
 
 `stopRun` sets `status = 'stopped'` directly (there is no separate `stopRequested` flag). The job reads the status at the start of every step, so a stop takes effect at the **next step boundary** (up to one model call later), saves no cards, and frees the lock. See [07](07-agent-run-design.md).
 
@@ -166,7 +167,7 @@ Reads: room members. Client writes: denied; only the `generateBrief` action writ
 |---|---|---|
 | teamId | text | `uniqueOn: ['teamId']`. A second create is refused by DeepSpace. **T3** |
 | runId | text | the run that holds the lock |
-| expiresAt | number | stale-lock rescue: `startRun` may take over an expired lock if a job died (15 min) |
+| expiresAt | number | 15-minute fallback, used only when the lock's run has ended or is missing. A live run's lock is judged by the run's `lastProgressAt`, not by this time (see [07](07-agent-run-design.md#stuck-runs-the-stale-rule-and-the-reaper)) |
 
 Nobody reads it from the browser (read denied for every role).
 

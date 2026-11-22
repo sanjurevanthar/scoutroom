@@ -64,3 +64,13 @@ The e2e test server uses fresh, throwaway storage on every run (`vite.config.ts`
 - Unit `src/server/briefs/parse.test.ts`: unknown citation id rejected, real-but-not-kept id rejected, bad JSON, wrong shape, extra keys, 0 or 5 paragraphs, empty citations; `keptCardIds` uses the one kept rule.
 - Unit `src/server/briefs/actions.test.ts` (fake tools + FakeLLM): only kept cards reach the prompt; 0 kept refused without an LLM call; viewer and non-member refused; limit holds (also for two at once); one repair then fail cleanly; 429 message; card text cannot close the data fence.
 - e2e `tests/brief.spec.ts` (two users, fake providers): A keeps a card and writes a brief, B sees it live, clicking `[1]` highlights the card, Stale appears live and clears on regenerate; server refusals and the 5-brief limit; a viewer reads but cannot write.
+
+## Stuck-run tests (session 09b)
+
+Run only these with `npm run check:reliability`.
+
+- Unit `src/lib/run-types.test.ts`: `isRunStale` (fresh, stale, done/failed/stopped never stale, edge at the threshold, no heartbeat), and the `STALE_RUN_MS` setting.
+- Unit `src/server/runs/actions.test.ts` (fake tools, mocked job queue): a stale run is reaped (`failed` + message, one lock, one new run); a fresh run is refused; **issue 2**: expired lock with fresh progress is refused; ended run's lock waits for the 15-minute TTL; failing lock release refuses cleanly; two starts at once on a stale room, one wins; a viewer is refused.
+- Unit `src/server/runs/pipeline.test.ts`: heartbeat is written; a job resumed after its run was reaped stops at the next step boundary, saves no cards, and leaves the new run's lock alone.
+- e2e `tests/stuck-runs.spec.ts` (two users, fake providers, `STALE_RUN_MS=3000`, question marker `[fake:hang]` stalls every model call for 12 s): (a) after the threshold a new start succeeds and the old run is no longer active; (b) a slow run whose steps keep reporting progress is not reaped; (c) two starts at once, one wins; (d) a viewer still cannot start.
+- Gap: the e2e cannot read the old run's `failed` text from the browser, so the exact message is checked in the unit test.

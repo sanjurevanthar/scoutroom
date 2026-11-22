@@ -155,6 +155,27 @@ The owner's LLM key pays for every run (see [11](11-decisions-and-risks.md), D10
 `startRun` creates one `run_locks` record. The collection has `uniqueOn: ['teamId']`, and DeepSpace refuses a second create with a "Duplicate" error, so two clicks at the same moment cannot both win (**T3**). The lock is deleted when the run ends. It also has `expiresAt`; a new `startRun` may take over an expired lock (the job or action died).
 *Source for `uniqueOn`: https://docs.deep.space/concepts/permissions*
 
+### Stuck runs: the stale rule and the reaper
+
+A job that crashes or hangs leaves its run `running` and its lock in place. Two parts fix this (reliability issue 1, [13](13-reliability.md)):
+
+1. **Heartbeat.** `runs.lastProgressAt` is set when the run is created, when a step begins and ends, and on every tool call.
+2. **One stale rule**, a pure function in `src/lib/run-types.ts`: `isRunStale(run, now, staleMs)` is true when the status is `queued` or `running` **and** `now - lastProgressAt > staleMs`. Done, failed and stopped runs are never stale; exactly at the threshold is not stale. `staleMs` is the non-secret setting `STALE_RUN_MS` (default 180000 = 3 minutes; the test server sets 3000).
+
+**Lazy reaper, inside `startRun`** (no cron). When the lock create fails, `startRun` looks at the run that holds it:
+
+| Lock holder | Result |
+|---|---|
+| `queued`/`running`, **not** stale | Refused: "a run is already active in this room". The 15-minute lock time is ignored, so a live run is never taken over (issue 2). |
+| `queued`/`running`, **stale** | Run set to `failed` with "Run stopped responding: marked as failed", lock removed, then the normal start continues. |
+| Ended or missing, or an old run with no heartbeat | Old rule: take the lock over only after its `expiresAt` (15 min). |
+
+Every write's result is checked. If marking the run or removing the lock fails, `startRun` refuses cleanly and creates nothing. Two clicks at once on a stale room both try the reap, but each removes the lock by its own record id and the lock is unique per room, so only one new run wins.
+
+**If the job wakes up after being reaped,** it reads the run at the next step boundary (and again just before saving cards), sees `failed`, saves no cards, and stops. `failRun` does not overwrite a run that has already ended, and `releaseLock` only removes a lock that has its own run id, so the new run's lock is safe.
+
+The board shows "This run seems stuck. Click Run scout to start a new one." when the latest run looks stale (owner and researcher). The browser uses the 3-minute default; the server is the judge.
+
 ## Failure handling
 
 | What fails | What happens |
