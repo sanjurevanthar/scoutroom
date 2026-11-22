@@ -75,6 +75,14 @@
 - **Why:** simplest and works now; researchers need no accounts or keys.
 - **Tradeoff:** the owner carries all cost and the key is a high-value secret. Controls: run limit (5 per room), hard caps per run, secret only in the store, never logged, and free-tier rate limits (Groq returns 429; no spending limit needed). If a room is abused, the owner can lower `runLimit` to 0 or rotate the key.
 
+### D12 · Removing a member also removes their votes
+- **Decision:** `removeMember` deletes that person's votes in the room. `castVote` refuses a request with no `value` (only an explicit `null` removes a vote).
+- **Why:** a person who left must not keep deciding Kept / Rejected; and a forgotten field must not delete a vote by accident.
+- **Not changed:** a person who is only made a viewer keeps their earlier vote (they cannot change it, but it still counts).
+
+### D11 · Process: who merges
+- **Note:** F2 was auto-merged by the agent before the PR process was in place; from F3 on, PRs are reviewed and merged by me.
+
 ## Risks and plan B
 
 | # | Risk | Likelihood | Plan B |
@@ -90,6 +98,7 @@
 | R9 | AI returns weak or empty cards | medium | Repair call (Plan A); show "no usable cards" with the steps. |
 | R10 | Prompt injection works partly | medium | Humans vote; LLM has no tools; URL allowlist (see 09). |
 | R11 | Lock stays stuck after a crash | low | `expiresAt` rescue in `startRun`. |
+| R12 | A person who is in about 100 or more rooms breaks live reads: the SDK's `team` read query uses one SQL `?` per room and hits SQLite's 100-variable limit ("too many SQL variables", page stuck on "Connecting..."). Found in the session 06 review: it made e2e tests flaky because the test accounts kept every room they created. | low for real users, high for test accounts | Tests now run on fresh, throwaway storage (`vite.config.ts`). For real users: add a way to leave or delete rooms, or cap rooms per user. Not built. |
 
 ## Spike results (session 02, branch `spike/verify`, local `deepspace test run`)
 

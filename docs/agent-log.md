@@ -84,3 +84,65 @@ How I directed the coding agent, session by session. Each entry follows this tem
   with a confidence percentage on each one. Then I made B a viewer, and the
   "Run scout" button disappeared for B, as expected. No issues found.
 - Tokens / cost (from /cost): TODO
+
+---
+
+## Session 05: Feature 3, team votes on cards (+ docs sync from F2)
+- Date/time: 2026-11-22
+- Goal: Owners and researchers keep or reject evidence cards; everyone sees live counts and a Kept / Rejected / Undecided status. Branch `feat/votes`, PR to main (not merged, not deployed).
+- My prompt: Session 05 prompt (see [docs/prompts/prompt-log.md](prompts/prompt-log.md)).
+- What the agent did:
+  - Part 0 (own commit): synced docs 06 and 07 with F2 (card shape `paper|background` + confidence 0-1, `run_locks` and why it exists, bad plan falls back to searching with the question, stop takes effect at the next step boundary, tests use fake providers via `SCOUTROOM_FAKE_PROVIDERS`); added the "F2 was auto-merged" note to doc 11 as D11.
+  - Data: `votes` collection (`teamId`, `cardId`, `userId`, `value keep|reject`), `uniqueOn cardId+userId`, member-only reads, all client writes denied.
+  - Action `castVote(cardId, value | null)`: room is taken from the card, caller must be a member and owner/researcher (viewers refused); null removes the vote; a changed vote updates the same row; a create refused by `uniqueOn` (two clicks at once) falls back to an update.
+  - The kept rule is one pure function, `cardStatus` in `src/lib/votes.ts` (with `tally`), used by the UI. Counts and status are computed live from `votes`, not stored on cards.
+  - UI: Keep / Reject buttons (my vote highlighted, click again to undo), `👍 n · 👎 n`, status badge, filter tabs All / Kept / Undecided / Rejected with counts, "Voting failed, try again." and an empty-filter message. Viewers see counts and status but no buttons.
+- Where I deviated from the docs: doc 06 had `choice` and stored `keepCount`/`rejectCount`/`decision` on the card. I used `value` (as in the prompt) and compute counts instead of storing them, so they cannot drift. Doc 06 and 07 are updated in this PR.
+- What I tested (`npx deepspace test run all`; fake providers only, no real API calls):
+  - Unit: the kept rule (no votes, ties, only rejects, one-vote margins) and `tally`; 62 unit tests pass in total.
+  - Two-user e2e: A and B vote on one card; counts, status and highlight update live on both screens; B's changed vote replaces their earlier one and A sees it; undo; filter tab counts.
+  - Server: viewer's `castVote` refused; non-member's refused; unknown card refused; bad value refused; the same vote twice and two simultaneous votes by one person still count once.
+- Known gap: some older Playwright tests are timing-sensitive and failed intermittently when the whole suite ran together with the new votes spec (API status page "Loading..." check, run-limit lock polling). Each failure was in a different test and the next run passed; two runs on `main` passed. Not fixed in this PR.
+- What I verified myself:
+- Tokens / cost (from /cost): TODO
+
+---
+
+## Session 06: Independent review of PR #1
+- Date/time: 2026-11-22
+- Goal: Review PR #1 (`feat/votes`) as a strict reviewer who did not write it, post the review, fix must-fix items and the flaky tests, prove 3 green full runs. No merge, no deploy.
+- My prompt: Session 06 prompt (see [docs/prompts/prompt-log.md](prompts/prompt-log.md)).
+- Findings (posted on the PR as a review comment):
+
+| # | Severity | File:line | Problem (one sentence) | Suggested fix |
+|---|---|---|---|---|
+| R1 | must-fix | test storage (`vite.config.ts`) | The test accounts keep every room they create (one is in 103); DeepSpace reads "my rooms" with one `?` per room and SQLite allows 100, so pages hang on "Connecting..." (the flaky tests). | Fresh, empty storage for every test run. |
+| R2 | should-fix | `votes/actions.ts:14` | A request with no `value` silently deletes the person's vote. | Require `value`; only explicit `null` removes. |
+| R3 | must-fix | `rooms.ts:129` | A removed member's votes still count toward Kept / Rejected. | Delete their votes when removing them. |
+| R4 | should-fix | `votes.spec.ts:147` | Fixed 1.5 s sleep instead of waiting for the real result. | Wait for the counts. |
+| R5 | should-fix | `votes.spec.ts` | No test that a non-member cannot read another room's votes. | Add a read test. |
+| R6 | should-fix | `votes/actions.ts` | No unit tests for the server action, only browser tests. | Unit tests with fake tools. |
+| R7 | nit | `ScoutBoard.tsx:207` | `canVote={canRun}` is confusing. | Separate `canVote`. |
+| R8 | nit | `votes/actions.ts:9` | `str` helper copied in 3 files. | Share it. |
+| R9 | nit | `ScoutBoard.tsx:164` | `role="tab"` without a tab panel. | Toggle buttons with `aria-pressed`. |
+| R10 | nit | `CardVotes.tsx:26` | Every vote error shows the same message. | Show the server message. |
+| R11 | nit | `votes.spec.ts:71` | `'All ('` assertion checks almost nothing. | Check the real number. |
+| R12 | nit | `runs-schema.ts` | Extra blank lines. | Remove. |
+
+  Checked and fine: the room comes from the card; membership and owner/researcher role checked on the server; client writes to `votes` denied; `uniqueOn` plus update fallback; the kept rule matches doc 07; no secrets in code, logs or tests.
+- Found later, while proving the fix: **R13** (must-fix, flaky): `collab.spec.ts` "API status page renders loading..." gave the mocked response after only 100 ms, so the test could miss the "Loading..." text. This was a second, separate cause (failed 1 of 3 runs after R1 was fixed).
+- What was fixed (commits on `feat/votes`):
+  - R1 `0de2379`: test server uses a fresh temp storage folder (only when `SCOUTROOM_FAKE_PROVIDERS=1`). Confirmed `.wrangler/state` is no longer touched.
+  - R2 `60c4a3e`: `castVote` refuses a missing `value`. Test added in `55ac5c1`.
+  - R3 `2ec6097`: `removeMember` deletes that person's votes. Test added in `55ac5c1`.
+  - R4 `55ac5c1`: the sleep is replaced by waiting for the counts (assertion kept, not weakened).
+  - R13 `096548d`: the response is held until the test has seen "Loading...", then released (no sleep, assertions unchanged).
+  - Docs `3f2786b`: D12 and risk R12 in doc 11, a vote note in doc 06, a "Test isolation" section in doc 10.
+- Not fixed (why):
+  - R5, R6: each needs more than 5 minutes (a non-member read goes over a WebSocket, and the action needs a fake tools harness). The server rules they would test are already covered by the e2e tests and the schema.
+  - R7 to R12: nits, skipped as instructed.
+  - Real-user part of R12/doc 11: a person in about 100 rooms still breaks live reads; there is no leave/delete room feature yet. Recorded as a risk, not built.
+  - Old local dev data: `.wrangler/state` still has 103 and 83 test rooms for the two test accounts. If your own `npm run dev` hangs on "Connecting...", delete that folder (dev data only).
+- Test results (`npx deepspace test run all`, foreground): before the fixes 3 of 4 runs failed a different old test each time. After R1 to R4: run 1 green, run 2 red (R13, one old test), run 3 green. After R13: **3 of 3 green** (62 unit + 21 Playwright each time). Only 3 runs prove it, so watch for a repeat.
+- What I verified myself:
+- Tokens / cost (from /cost): TODO

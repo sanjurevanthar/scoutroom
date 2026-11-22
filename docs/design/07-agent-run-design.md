@@ -54,7 +54,9 @@ sequenceDiagram
 4. **Validate** and **save** cards. Cards appear live.
 5. **Finish.** Set status, release the lock.
 
-Between every step: check `stopRequested`. If true, end as `stopped`.
+Between every step: read the run's `status`. If it is `stopped`, save nothing more and free the lock. **Stop takes effect at the next step boundary**, not instantly: a model or search call already in flight finishes first.
+
+**A bad plan does not fail the run.** If the plan reply is not valid, the run falls back to searching with the question itself (one paper query and one background query) and the step detail says "Plan was unclear, searching with the question itself".
 
 ## Plan B (fallback): one server action, fixed pipeline
 
@@ -105,7 +107,7 @@ stateDiagram-v2
   queued --> stopped: stopRun before start
   running --> done: cards saved
   running --> failed: error after retries
-  running --> stopped: stopRequested seen between steps
+  running --> stopped: stopped status seen at next step boundary
   done --> [*]
   failed --> [*]
   stopped --> [*]
@@ -122,8 +124,8 @@ Every change is a record update. Everyone reads the same `runs.status`. A refres
       "claim": "string, 1 to 280 chars",
       "sourceUrl": "must be one of the URLs returned by this run's searches",
       "sourceTitle": "string, max 200",
-      "sourceType": "web | paper",
-      "confidence": "low | medium | high",
+      "sourceType": "paper | background",
+      "confidence": "number from 0 to 1",
       "quote": "optional string, max 300, copied from the snippet"
     }
   ]
@@ -163,13 +165,18 @@ The owner's LLM key pays for every run (see [11](11-decisions-and-risks.md), D10
 | Timeout | Run `failed` with "took too long". Lock released. |
 | User closes the page | Plan A: nothing changes, the job keeps going. Plan B: T1. |
 | Worker restarts mid-run (Plan A) | JobRoom retries the handler with `job.resumeFrom`. Steps use `uniqueOn: ['runId','seq']`, so a repeated step does not duplicate. *Source: `/guides/background-jobs#lifecycle-and-limits`* |
-| Stop clicked | `stopRequested = true`; run ends `stopped` after the current step. Owner and researchers can do it. |
+| Stop clicked | `stopRun` sets the run to `stopped`; the job sees it at the next step boundary, saves no cards, and frees the lock. Owner and researchers can do it. |
+| Bad plan from the LLM | Not a failure: fall back to searching with the question itself. |
 | Budget hit mid-run | Remaining searches skipped; go straight to cards with what we have. |
 | Provider misconfigured (missing key) | `startRun` refuses early with "AI provider not configured" and creates no run and no lock. |
 
 ## Card decision rule (F3)
 
-A card is **`kept`** when `keepCount > rejectCount` **and** `keepCount >= 1`. It is **`rejected`** when `rejectCount > keepCount`. Otherwise it is **`open`** (no votes, or a tie). Counts are **recomputed** from `votes` after each vote, so they cannot drift.
+A card is **KEPT** when `keeps > rejects` **and** `keeps >= 1`. It is **REJECTED** when `rejects > keeps`. Otherwise it is **UNDECIDED** (no votes, or a tie). The counts and the status are **computed** from the `votes` records by one pure function (`cardStatus` in `src/lib/votes.ts`), never stored on the card, so they cannot drift.
+
+## Tests never call real APIs
+
+Automated tests run with fake providers: `tests/playwright.config.ts` sets `SCOUTROOM_FAKE_PROVIDERS=1`, which `vite.config.ts` passes to the worker so it uses `FakeLLM` and `FakeSearch` (unset for dev, build and deploy). Unit tests inject the same fakes. A fake marker in the question, such as `[fake:429]`, simulates a provider failure.
 
 ## TO VERIFY
 

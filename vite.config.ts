@@ -1,3 +1,6 @@
+import { mkdtempSync } from 'node:fs'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
@@ -8,6 +11,12 @@ import { deepspaceBuild } from 'deepspace/build'
 import { prerender } from './prerender.ts'
 
 const appDir = fileURLToPath(new URL('.', import.meta.url))
+const testMode = process.env.SCOUTROOM_FAKE_PROVIDERS === '1'
+// Test runs get their own empty storage. Before this, every run added rooms for the same two test
+// accounts to .wrangler/state; past ~100 rooms the SDK's team-read query hits SQLite's 100-variable
+// limit and random e2e tests fail with "Connecting..." (docs/design/11, R12). Fresh storage also
+// keeps tests away from your real dev data.
+const testStatePath = testMode ? mkdtempSync(join(tmpdir(), 'scoutroom-test-state-')) : undefined
 
 export default defineConfig({
   plugins: [
@@ -20,11 +29,12 @@ export default defineConfig({
     // the generated app and keep local dev/test startup deterministic.
     cloudflare({
       inspectorPort: false,
+      ...(testStatePath ? { persistState: { path: testStatePath } } : {}),
       // Automated tests set SCOUTROOM_FAKE_PROVIDERS=1 (tests/playwright.config.ts): the worker then
       // gets fake AI/search providers and never calls Groq, OpenAlex or Wikipedia. Unset otherwise,
       // so dev, build and deploy keep the real providers from wrangler.toml.
       config: (config) =>
-        process.env.SCOUTROOM_FAKE_PROVIDERS === '1'
+        testMode
           ? { vars: { ...config.vars, LLM_PROVIDER: 'fake', SEARCH_PROVIDER: 'fake' } }
           : {},
     }),

@@ -87,4 +87,24 @@ export const runLocksSchema: CollectionSchema = {
   },
 }
 
-export const runSchemas: CollectionSchema[] = [runsSchema, runStepsSchema, cardsSchema, runLocksSchema]
+
+
+/**
+ * One vote per person per card (docs/design/06). `uniqueOn cardId+userId` makes a second vote
+ * by the same person impossible; changing a vote updates the same row. Members read; only the
+ * `castVote` action writes.
+ */
+export const votesSchema: CollectionSchema = {
+  name: 'votes',
+  columns: [
+    text('teamId', { required: true }),
+    text('cardId', { required: true }),
+    text('userId', { required: true }),
+    select('value', ['keep', 'reject']),
+  ],
+  uniqueOn: ['cardId', 'userId'],
+  teamField: 'teamId',
+  permissions: teamRead,
+}
+
+export const runSchemas: CollectionSchema[] = [runsSchema, runStepsSchema, cardsSchema, runLocksSchema, votesSchema]

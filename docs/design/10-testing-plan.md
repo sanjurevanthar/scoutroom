@@ -54,3 +54,7 @@ For T-8 to T-11, the provider calls are replaced by a fake (a fast stub) so test
 - [ ] `npx deepspace logs` shows no errors; `npx deepspace app usage` shows spend is small.
 - [ ] **Seeded demo room (Sunday):** a room with a real question, a finished run, ~8 cards and a few votes, created before the demo as a backup if search, the AI provider or the network is slow.
 - [ ] `GROQ_API_KEY` and `OPENALEX_MAILTO` are in the secrets store (not in git); Groq free-tier rate limits are known (no spending limit needed).
+
+## Test isolation
+
+The e2e test server uses fresh, throwaway storage on every run (`vite.config.ts`, only when `SCOUTROOM_FAKE_PROVIDERS=1`). The two test accounts keep every room they create, and past about 100 rooms the SDK's team-read query fails (R12 in [11](11-decisions-and-risks.md)), which made random tests fail. Never point tests at `.wrangler/state`.
