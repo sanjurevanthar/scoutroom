@@ -179,3 +179,17 @@ How I directed the coding agent, session by session. Each entry follows this tem
   "Stale" note. After A made B a viewer, B could read the brief but the
   "Write brief" button was gone. Everything worked.
 - Tokens / cost (from /cost): TODO
+
+---
+
+## Session 08a: Real token usage for sessions 00-07
+- Date/time: 2026-11-22
+- Goal: Replace the TODO in `docs/token-usage.md` with real numbers for sessions 00-07. Branch `docs/token-usage`, PR to main (not merged).
+- My prompt: Session 08a prompt (see [docs/prompts/prompt-log.md](prompts/prompt-log.md)).
+- What the agent did:
+  - Listed Claude Code's session logs for this repo and its parent folder, matched each to a session by time and first prompt, and read the token counts from `npx ccusage session --json` (the raw per-message logs sum to the same totals).
+  - Where one log file held two sessions (00 and 01) or later bookkeeping (03), split it by timestamp and priced the parts with ccusage's own per-token rates. The method and one unassigned 24-second log are in the notes of `docs/token-usage.md`.
+  - Filled the table (inputs, outputs, cache read/write, estimated cost, one saved/wasted line per session), a Total row, and the "How I kept token use low" bullets. Refreshed `docs/token-report.md` (daily totals only; ccusage cannot filter by project).
+- What I checked: raw log sums equal ccusage for every whole session; the fitted rates reproduce ccusage costs to rounding; the file has no home paths, emails or other project names (grep) and is unchanged by `scripts/redact.sh`.
+- What I verified myself:
+- Tokens / cost (from /cost): this session is not counted in the table.

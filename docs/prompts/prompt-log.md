@@ -210,3 +210,59 @@ PROCESS:
   DRAFT (`gh pr create --draft`), list what's missing, and STOP.
 </pasted_content id="df18">
 
+### 2026-11-22 16:30 · session 91be81e4
+./scripts/token-report.sh
+for f in docs/transcripts/session-*.md; do ./scripts/redact.sh "$f" > "$f.tmp" && mv "$f.tmp" "$f"; done
+
+### 2026-11-22 16:34 · session 91be81e4
+
+
+<pasted_content id="1a35">
+SESSION 08a: Fill docs/token-usage.md for sessions 00–07 with REAL numbers.
+Follow CLAUDE.md (branch docs/token-usage, open a PR, don't merge).
+
+Sources (do not invent any number):
+- `npx -y ccusage@latest session --json` (check `--help` for options to
+  filter by project or date). It reads Claude Code's local logs.
+- Claude Code session logs in ~/.claude/projects/ (the folders for
+  .../deepspace-project-scoutroom AND .../deepspace-project, because
+  Session 00 was started from the parent folder).
+- docs/prompts/prompt-log.md (session ids + timestamps) and
+  docs/agent-log.md (what each session did) to match sessions to numbers.
+
+Session map (match by date/time and first prompt):
+00 Setup (skill, tracking, secret protection), from the parent folder
+01 Design docs
+02 Groq corrections + spike
+03 Feature 1: rooms
+04 Feature 2: agent run
+05 Feature 3: votes
+06 Independent review of PR #1
+07 Feature 4: brief
+
+Fill the table:
+| Session | Date | Feature | Input tokens | Output tokens | Cache read | Cache write | Est. cost | What saved / wasted tokens |
+- One row per session 00–07. If a session spans several ccusage sessions,
+  add them up and say so. If you can't find one, write "not found" (no guess).
+- "Est. cost" = ccusage's API-equivalent estimate. Add a note under the
+  table: "I use a Claude Pro subscription, so this is an estimate of the API
+  cost, not money spent."
+- "What saved / wasted tokens": one honest line per session from the
+  transcripts and agent log, e.g. saved: docs MCP instead of pasted docs,
+  one feature per session, fake providers in tests, fresh session per
+  feature; wasted: 300 lines of selected SKILL.md sent with a prompt (S03),
+  many Monitor/sleep timers (S05), long design session (~137k context).
+- Add a Total row.
+- Under it, update "How I kept token use low" with 4–6 real bullets.
+
+Privacy: include ONLY this project's sessions. No other project names,
+no full home paths (use <user>), no emails. Pipe the final file through
+scripts/redact.sh before committing.
+
+Also refresh docs/token-report.md with scripts/token-report.sh (this
+project only, if ccusage can filter; otherwise only daily totals).
+
+Commit (the secret check must pass), push, and open a PR with a short
+summary of the totals. Do NOT merge. Report, then STOP.
+</pasted_content id="1a35">
+
