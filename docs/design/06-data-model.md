@@ -47,7 +47,7 @@ erDiagram
     string claim
     string sourceUrl
     string sourceType
-    string confidence
+    number confidence
   }
   VOTE {
     string cardId FK
@@ -103,48 +103,44 @@ Read: **owner only** (a custom server action returns the link; the code is never
 | Field | Type | Notes |
 |---|---|---|
 | teamId | text | room id |
+| question | text | copy of the room question at start time |
 | status | select | `queued` / `running` / `done` / `failed` / `stopped` |
-| stopRequested | boolean | set by `stopRun`, checked between steps |
-| startedBy | text | user id |
-| searchCalls | number | 0..8 (hard cap) |
-| aiCalls | number | cap 3 (plan, cards, one repair) |
+| toolCallsUsed | number | LLM and search calls together, hard cap 8 per run |
 | error | text | plain-words reason when `failed` |
-| jobId | text | the background job id (Plan A only) |
-| plan | select | `job` (Plan A) / `action` (Plan B), see [07](07-agent-run-design.md) |
-| llmProvider, searchProvider | text | names of the providers used, e.g. `groq`, `openalex+wikipedia` (audit and later cost review) |
-| inputTokens, outputTokens | number | from the LLM response if available |
+| startedBy | text | user id |
+
+`stopRun` sets `status = 'stopped'` directly (there is no separate `stopRequested` flag). The job reads the status at the start of every step, so a stop takes effect at the **next step boundary** (up to one model call later), saves no cards, and frees the lock. See [07](07-agent-run-design.md).
 
 ### `run_steps`
 | Field | Type | Notes |
 |---|---|---|
 | teamId, runId | text | |
-| seq | number | order, 1..n. `uniqueOn: ['runId','seq']` makes a retried step safe |
-| kind | select | `plan` / `search_web` / `search_papers` / `cards` / `brief` |
+| seq | number | order, 1..4. `uniqueOn: ['runId','seq']` makes a retried step safe |
+| label | text | `Planning` / `Searching papers` / `Checking background` / `Writing cards` |
 | status | select | `running` / `done` / `failed` |
-| summary | text | plain words, e.g. "Searched the web: 'qdrant hybrid search' (8 results)" |
+| detail | text | plain words, e.g. "2 paper queries + 1 background query" |
 
 ### `cards`
 | Field | Type | Notes |
 |---|---|---|
 | teamId, runId | text | |
 | claim | text | 1..280 chars |
-| sourceUrl | text | must come from this run's search results |
-| sourceTitle | text | |
-| sourceName | text | e.g. `OpenAlex`, `Wikipedia` (later `Exa`, `Scholar`) |
-| sourceType | select | `web` / `paper` |
-| confidence | select | `low` / `medium` / `high` |
-| quote | text | optional, max 300 |
-| keepCount, rejectCount | number | recomputed from `votes` after each vote |
-| decision | select | `open` / `kept` / `rejected`. **Kept = keeps > rejects AND keeps >= 1.** Rejected = rejects > keeps. Else open (see 07) |
+| sourceUrl | text | must be one of the URLs this run's searches returned |
+| sourceTitle | text | taken from our search hit, not from the model |
+| sourceType | select | `paper` (OpenAlex) / `background` (Wikipedia). Taken from our search hit |
+| confidence | number | 0 to 1. `background` cards are capped at 0.6 |
+
+Votes are **not** stored on the card. The keep/reject counts and the Kept / Rejected / Undecided status are computed from `votes` (see [Card decision rule](07-agent-run-design.md#card-decision-rule-f3)), so they cannot drift.
 
 ### `votes`
 | Field | Type | Notes |
 |---|---|---|
-| teamId, cardId | text | |
-| userId | text | `userBound`, `immutable` |
-| choice | select | `keep` / `reject` |
+| teamId | text | room id (the `'team'` read rule needs it) |
+| cardId | text | |
+| userId | text | the voter |
+| value | select | `keep` / `reject` |
 
-`uniqueOn: ['cardId','userId']`: one vote per person per card; changing a vote updates the same row.
+`uniqueOn: ['cardId','userId']`: one vote per person per card. Changing a vote replaces that row; removing a vote deletes it. Reads: room members. Client writes: denied; only the `castVote` server action writes (owner and researcher only).
 
 ### `briefs` [THIS BUILD, stretch]
 | Field | Type | Notes |
@@ -155,11 +151,15 @@ Read: **owner only** (a custom server action returns the link; the code is never
 | generatedBy | text | user id |
 
 ### `run_locks` (the one-run-per-room lock)
+**Why it exists:** two people clicking Run at the same moment must not start two runs (double cost, tangled steps). `uniqueOn: ['teamId']` means DeepSpace refuses a second lock for the same room, so exactly one click wins. The lock is released when the run ends or is stopped.
+
 | Field | Type | Notes |
 |---|---|---|
 | teamId | text | `uniqueOn: ['teamId']`. A second create is refused by DeepSpace. **T3** |
-| runId | text | |
-| expiresAt | number | stale-lock rescue if a job dies |
+| runId | text | the run that holds the lock |
+| expiresAt | number | stale-lock rescue: `startRun` may take over an expired lock if a job died (15 min) |
+
+Nobody reads it from the browser (read denied for every role).
 
 ## Example records
 
@@ -172,12 +172,8 @@ Read: **owner only** (a custom server action returns the link; the code is never
     "claim": "Qdrant supports hybrid dense+sparse search natively.",
     "sourceUrl": "https://example.com/qdrant-hybrid",
     "sourceTitle": "Hybrid search in Qdrant",
-    "sourceType": "web",
-    "confidence": "high",
-    "quote": "Qdrant combines dense and sparse vectors in one query.",
-    "keepCount": 2,
-    "rejectCount": 0,
-    "decision": "kept"
+    "sourceType": "paper",
+    "confidence": 0.9
   }
 }
 ```

@@ -75,6 +75,9 @@
 - **Why:** simplest and works now; researchers need no accounts or keys.
 - **Tradeoff:** the owner carries all cost and the key is a high-value secret. Controls: run limit (5 per room), hard caps per run, secret only in the store, never logged, and free-tier rate limits (Groq returns 429; no spending limit needed). If a room is abused, the owner can lower `runLimit` to 0 or rotate the key.
 
+### D11 · Process: who merges
+- **Note:** F2 was auto-merged by the agent before the PR process was in place; from F3 on, PRs are reviewed and merged by me.
+
 ## Risks and plan B
 
 | # | Risk | Likelihood | Plan B |
