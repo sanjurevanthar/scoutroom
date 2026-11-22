@@ -179,3 +179,14 @@ How I directed the coding agent, session by session. Each entry follows this tem
   "Stale" note. After A made B a viewer, B could read the brief but the
   "Write brief" button was gone. Everything worked.
 - Tokens / cost (from /cost): TODO
+
+## Session 08: Docs scope cleanup
+- Date/time: 2026-11-22
+- Goal: Keep only ScoutRoom-relevant files in `docs/`; move the rest out of the repo.
+- My prompt: see [docs/prompts/prompt-log.md](prompts/prompt-log.md).
+- What the agent did:
+  - Moved `token-report.md` (machine-wide usage, all projects) and `catalog-features.txt` / `catalog-integrations.txt` (generic DeepSpace catalogs) to `~/.claude/scoutroom-reference/`.
+  - `scripts/token-report.sh` now writes there by default (override with `TOKEN_REPORT_OUT`).
+  - Doc changes: `design/00-README.md`, `08-integrations.md`, `12-roadmap.md` now point to the live `npx deepspace` commands instead of the removed catalog files.
+- Test results: none run; docs and one shell script only.
+- What I verified myself:

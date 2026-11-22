@@ -21,7 +21,7 @@ Tags used everywhere: **[THIS BUILD]** (due Sunday night) and **[FUTURE]** (docu
 | 11 | [Decisions and risks](11-decisions-and-risks.md) | Key decisions, risks, **TO VERIFY list**, **open questions** |
 | 12 | [Roadmap](12-roadmap.md) | [FUTURE] features in priority order |
 
-Also in `docs/`: `catalog-features.txt` and `catalog-integrations.txt` (saved DeepSpace catalogs, from `npx deepspace add --list` and `npx deepspace integrations list`).
+Saved DeepSpace catalogs (`npx deepspace add --list`, `npx deepspace integrations list`) are not kept in this repo; re-run those commands for the current list.
 
 ## The design in five lines
 
