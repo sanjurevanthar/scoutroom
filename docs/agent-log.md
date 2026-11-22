@@ -224,3 +224,19 @@ How I directed the coding agent, session by session. Each entry follows this tem
   crash a job on the live site, so the automated checks are my proof for
   the crash case; live, I checked that a normal run still works.
 - Tokens / cost (from /cost): see [token-usage.md](token-usage.md) (09b row is a snapshot)
+
+---
+
+## Session 08: README
+- Date/time: 2026-11-22
+- Goal: Replace the scaffold README with a short, scannable one for DeepSpace reviewers, on `docs/readme`. Describe only what is built and verified. No merge, no deploy.
+- My prompt: [docs/prompts/08-readme.md](prompts/08-readme.md).
+- What the agent did:
+  - Read docs/design 00 to 13, `docs/agent-log.md`, `docs/token-usage.md`, `package.json`, the schemas and the prompts in `src/`.
+  - Wrote `README.md` with the 12 requested sections, one Mermaid diagram and links to the design docs.
+- Decisions:
+  - The cost line says "sessions 00 to 07 about $10.6", because that is what the Total row in `token-usage.md` covers (rows 09a and 09b are not in it).
+  - The secrets example uses `pbpaste | ... --stdin` (from `deepspace secrets --help`: `KEY --stdin`); it was not run.
+- Test results: not run (docs only, no code changed).
+- What I verified myself:
+- Tokens / cost (from /cost): see [token-usage.md](token-usage.md) (no row for this session yet)
