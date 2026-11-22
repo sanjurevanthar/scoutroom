@@ -84,3 +84,63 @@ WHEN DONE
 - Then STOP and wait for me.
 </pasted_content id="2dc4">
 
+### 2026-11-21 21:40 · session 91be81e4
+
+
+<pasted_content id="1a35">
+SESSION 03: FEATURE 1: Rooms, roles, invite links. Production quality.
+
+Context: read CLAUDE.md, docs/design/03, 04, 05, 06, 11 (spike results).
+The spike (branch spike/verify) CONFIRMED: role check in server actions,
+uniqueOn, server-only job enqueue, test accounts via the users(2) fixture.
+Reuse what worked from spike/verify, but write clean production code on a
+new branch feat/rooms. Do not merge spike/verify.
+
+Known gotcha from the spike: files imported by src/actions/index.ts must not
+import action-routes.ts at load time (import cycle = empty actions map = 404).
+
+BUILD (F1 only):
+1. Data: rooms (title, question, ownerId, runLimit=5, inviteToken) and
+   team_members (roomId, userId, role: owner|researcher|viewer), with
+   uniqueOn(roomId,userId). Follow docs/design/06.
+2. READ ACCESS: only members of a room can read that room's data. The spike
+   used read: true. Fix that here using DeepSpace's permission rules (check
+   the docs for the right rule, e.g. team-based reads). Non-members get nothing.
+3. Server actions (all writes go through actions with role checks):
+   createRoom (creator becomes owner), createInviteLink (owner),
+   joinByInvite(token) (joins as researcher), changeRole (owner),
+   removeMember (owner). The owner can't remove themselves.
+4. Screens (simple, clean, follow doc 04; use existing scaffold UI pieces
+   and `npx deepspace add` features where they fit, don't hand-build them):
+   - Rooms list (my rooms + "New room")
+   - Create room (title + research question)
+   - Room page shell: header with question, members panel with roles and
+     who's online (presence), and an empty board area saying
+     "Agent runs arrive in Feature 2"
+   - Invite: owner copies the link; opening it signs in and joins
+5. Empty, loading and error states.
+
+TESTS (must pass before you finish):
+- Two-user Playwright test (users(2) fixture): A creates a room, B joins by
+  link, both see each other in the members list live.
+- Server checks: a non-member can't read the room; a viewer can't call
+  owner-only actions (call the actions directly, not only through the UI).
+- `npx deepspace test run` passes.
+
+PROCESS:
+- First give me a SHORT plan (files you'll create/change, 10 lines max).
+  Then build without waiting, unless something in the plan conflicts with
+  the docs. In that case, ask me.
+- Keep code readable: small functions, clear names, types for every record.
+- When done: merge feat/rooms into main, run the secret check, push, and
+  `npx deepspace deploy`. Then open https://scoutroom.app.space and confirm
+  the rooms list loads.
+- Add Session 03 to docs/agent-log.md (what you built, what you tested,
+  anything you got wrong and fixed). Leave the "What I verified myself"
+  line for me to fill.
+- Report: what works, test results, anything unfinished. Then STOP.
+</pasted_content id="1a35">
+
+### 2026-11-21 21:40 · session 91be81e4
+Note: secrets now set: GROQ_API_KEY and OPENALEX_API_KEY (server-only). No mailto needed.
+
