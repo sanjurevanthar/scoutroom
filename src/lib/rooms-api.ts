@@ -34,6 +34,7 @@ export const roomsApi = {
     callAction<{ userId: string }>('removeMember', { roomId, userId }),
   startRun: (roomId: string) => callAction<{ runId: string }>('startRun', { roomId }),
   stopRun: (runId: string) => callAction<{ runId: string }>('stopRun', { runId }),
+  generateBrief: (roomId: string) => callAction<{ briefId: string; seq: number }>('generateBrief', { roomId }),
   castVote: (cardId: string, value: VoteValue | null) =>
     callAction<{ cardId: string; value: VoteValue | null }>('castVote', { cardId, value }),
 }

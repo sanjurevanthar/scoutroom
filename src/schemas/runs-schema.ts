@@ -107,4 +107,27 @@ export const votesSchema: CollectionSchema = {
   permissions: teamRead,
 }
 
-export const runSchemas: CollectionSchema[] = [runsSchema, runStepsSchema, cardsSchema, runLocksSchema, votesSchema]
+
+
+/**
+ * Cited briefs (F4, docs/design/06). History is kept (max 5 per room); the page shows the latest.
+ * `uniqueOn teamId+seq` makes the per-room limit race-proof. JSON-valued fields are stored as text.
+ * Members read; only the `generateBrief` action writes.
+ */
+export const briefsSchema: CollectionSchema = {
+  name: 'briefs',
+  columns: [
+    text('teamId', { required: true }),
+    number('seq'),
+    text('content', { required: true }),
+    text('citedCardIds'),
+    text('keptCardIds'),
+    text('createdBy', { required: true }),
+    text('model'),
+  ],
+  uniqueOn: ['teamId', 'seq'],
+  teamField: 'teamId',
+  permissions: teamRead,
+}
+
+export const runSchemas: CollectionSchema[] = [runsSchema, runStepsSchema, cardsSchema, runLocksSchema, votesSchema, briefsSchema]

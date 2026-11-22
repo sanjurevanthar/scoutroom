@@ -30,6 +30,19 @@ export const defaultFakeResponder: FakeResponder = (messages, schema) => {
       backgroundQuery: 'fake background query',
     })
   }
+  if (schema?.name === 'brief') {
+    // Cites the real card ids the prompt gave it: first card in paragraph 1, the rest in paragraph 2.
+    const user = messages.find((m) => m.role === 'user')?.content ?? ''
+    const block = user.match(/<cards>\s*([\s\S]*?)\s*<\/cards>/)?.[1]
+    const cards: { id: string; claim: string }[] = block ? JSON.parse(block) : []
+    const rest = cards.slice(1)
+    return JSON.stringify({
+      paragraphs: [
+        { text: `Fake brief: the team kept ${cards.length} card(s). ${cards[0]?.claim ?? ''}`, citations: cards.slice(0, 1).map((c) => c.id) },
+        ...(rest.length ? [{ text: 'Fake brief: further kept evidence supports this.', citations: rest.map((c) => c.id) }] : []),
+      ],
+    })
+  }
   const sources = sourcesFrom(messages)
   return JSON.stringify({
     cards: sources.slice(0, 4).map((s, i) => ({
@@ -42,6 +55,7 @@ export const defaultFakeResponder: FakeResponder = (messages, schema) => {
 
 export class FakeLLM implements LLMProvider {
   readonly name = 'fake'
+  readonly model = 'fake'
   readonly calls: ChatMessage[][] = []
   constructor(
     private readonly respond: FakeResponder = defaultFakeResponder,

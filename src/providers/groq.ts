@@ -24,7 +24,7 @@ export interface GroqOptions {
 export class GroqProvider implements LLMProvider {
   readonly name = 'groq'
   private readonly apiKey: string
-  private readonly model: string
+  readonly model: string
   private readonly fetchImpl: FetchLike
   private readonly sleep: Sleep
 
