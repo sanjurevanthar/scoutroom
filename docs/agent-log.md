@@ -179,3 +179,22 @@ How I directed the coding agent, session by session. Each entry follows this tem
   "Stale" note. After A made B a viewer, B could read the brief but the
   "Write brief" button was gone. Everything worked.
 - Tokens / cost (from /cost): TODO
+
+---
+
+## Session 09a: Reliability document (docs only)
+- Date/time: 2026-11-22
+- Goal: Document 6 run-reliability issues I found in my own review, verified against the code, with options and checks. Fix only issue 1 (in 09b); the rest are future work. No code changes.
+- My prompt: [docs/prompts/09a-reliability-doc.md](prompts/09a-reliability-doc.md).
+- What the agent did:
+  - Read `src/server/runs/{actions,job,store,pipeline}.ts`, `src/cron.ts`, `src/lib/run-types.ts`, `ScoutBoard.tsx`, the SDK `ActionTools` types and the DeepSpace background-jobs docs.
+  - Wrote `docs/design/13-reliability.md` (intro, summary table, 6 issues, checklist, "Why not now").
+  - Linked it from doc 00, doc 11 (R11 updated, R13 added) and doc 12 (follow-up table).
+- Findings that differ from my prompt:
+  - Issue 1: "blocked forever" is too strong. The lock expires after 15 minutes and Stop works on a `running` run; but the run stays `running`, the UI stays blocked, and `stopRun` does not free the lock of a `running` run.
+  - Issue 2: accurate but unlikely (a run is at most 8 tool calls).
+  - Issue 3: no transaction method exists in `ActionTools`; none found in the docs.
+  - Issue 5: no retry for thrown errors is accurate, but the retry-safe code also protects the platform's crash-recovery retry, so it is not dead.
+- Test results: not run (docs only, no code changed).
+- What I verified myself:
+- Tokens / cost (from /cost): TODO

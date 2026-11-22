@@ -17,6 +17,18 @@
 
 Sources: `npx deepspace add --list` (`documents`, `cron`), `npx deepspace integrations list` (`email`, `google`), `AGENTS.md` (agent tools), https://docs.deep.space/guides/scheduled-jobs.
 
+## Reliability follow-ups (from [13](13-reliability.md))
+
+Not features, but worth doing before real use. Issue 1 is being fixed in session 09b; the rest are future.
+
+| Item | What | Suggested option |
+|---|---|---|
+| 13.2 | Judge the run lock by progress, not a fixed 15 minutes | Same heartbeat as 13.1 |
+| 13.3 | Make `startRun` safe without transactions | Safe write order, check every result, self-healing reaper |
+| 13.4 | Hide cards from runs that did not finish | Show only cards of `done` runs; best-effort cleanup |
+| 13.5 | Make the retry setting honest | No automatic retries (option A) |
+| 13.6 | Do not charge the quota for failed runs; cap attempts | Count `done` runs; hard cap of about 10 attempts per room |
+
 ## Why this order
 
 - 1-2 improve trust in the core loop (steer it, see cost).

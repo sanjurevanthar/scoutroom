@@ -20,6 +20,7 @@ Tags used everywhere: **[THIS BUILD]** (due Sunday night) and **[FUTURE]** (docu
 | 10 | [Testing plan](10-testing-plan.md) | What we test, how, and a demo-day checklist |
 | 11 | [Decisions and risks](11-decisions-and-risks.md) | Key decisions, risks, **TO VERIFY list**, **open questions** |
 | 12 | [Roadmap](12-roadmap.md) | [FUTURE] features in priority order |
+| 13 | [Reliability review](13-reliability.md) | 6 run-reliability issues, verified against the code; 1 fixed now, 5 documented with options |
 
 Saved DeepSpace catalogs (`npx deepspace add --list`, `npx deepspace integrations list`) are not kept in this repo; re-run those commands for the current list.
 
