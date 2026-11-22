@@ -81,7 +81,7 @@ The two settings are independent: you can use Groq with DeepSpace search, or the
 
 ## DeepSpace integrations (later)
 
-Facts from `npx deepspace integrations info <name>` (full list saved in `docs/catalog-integrations.txt`) and https://docs.deep.space/guides/external-apis.
+Facts from `npx deepspace integrations info <name>` (full list: `npx deepspace integrations list`) and https://docs.deep.space/guides/external-apis.
 
 | Integration | Replaces | Input (from `info`) | Cost (from catalog) |
 |---|---|---|---|
