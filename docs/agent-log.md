@@ -170,5 +170,12 @@ How I directed the coding agent, session by session. Each entry follows this tem
 - Decisions: listed in the PR under "Decisions I made".
 - Test results (`npx deepspace test run all`, foreground, 3 runs): 3 of 3 green (85 unit + 23 Playwright each time).
 - Real Groq run (local, one run): the brief followed the cards and every citation was valid; one sentence added a little outside colour ("integrates with the MongoDB ecosystem"). The brief text is in the PR.
-- What I verified myself:
+- What I verified myself: - I merged PR #3, deployed from main, and tested on
+  scoutroom.app.space with two accounts (Chrome + private window). Before any
+  card was kept, "Write brief" was disabled. After A kept 2 cards, "Write
+  brief" produced a short summary with [1] [2] citations, and it appeared
+  live in B's window without refreshing. Clicking [1] jumped to and
+  highlighted the right card. When B kept a third card, the brief showed the
+  "Stale" note. After A made B a viewer, B could read the brief but the
+  "Write brief" button was gone. Everything worked.
 - Tokens / cost (from /cost): TODO
