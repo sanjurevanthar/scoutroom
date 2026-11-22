@@ -210,3 +210,119 @@ PROCESS:
   DRAFT (`gh pr create --draft`), list what's missing, and STOP.
 </pasted_content id="df18">
 
+### 2026-11-22 18:22 · session 893d6dde
+
+
+<pasted_content id="d827">
+SESSION 08: Write README.md. Follow CLAUDE.md (branch docs/readme, open a PR,
+don't merge). Audience: DeepSpace reviewers. Simple English, short sections,
+easy to scan. Sources: docs/design/ (00–13), docs/agent-log.md,
+docs/token-usage.md, the code. Do NOT invent facts: only describe what is
+built and verified. Replace the scaffold README completely.
+
+Sections:
+1. ScoutRoom: a one-line pitch + live link https://scoutroom.app.space
+2. What it does: the 4 features as a short story (rooms + roles with invite
+   links → live agent run with evidence cards → team votes keep/reject →
+   cited brief from kept cards only)
+3. Try it in 2 minutes: 2 browsers, create a room, copy the invite link,
+   run scout, vote, write brief
+4. DeepSpace pieces used: table "Need | DeepSpace primitive | How we use it"
+   (auth, RBAC + 'team' reads, records + live sync, presence, server actions,
+   background jobs, uniqueOn locks, secrets, deploy, logs)
+5. Architecture: one small Mermaid diagram + link to docs/design/05
+6. Main tradeoff: 0 DeepSpace credits → LLMProvider/SearchProvider
+   interfaces with Groq + OpenAlex + Wikipedia; switching to DeepSpace
+   anthropic/exa/scholar is a config change. Integrations left out and why.
+7. Safety: server-only AI calls, role checks on the server, budget guard,
+   one run per room, strict JSON + citation validation, prompt-injection
+   guard, secrets only in `deepspace secrets`, pre-commit secret check
+8. Reliability: link docs/design/13-reliability.md. #1 and #2 fixed
+   (heartbeat + stale-run reaper, `npm run check:reliability`); #3–#6
+   documented as future work with suggested options.
+9. Tests & logs: unit + two-user Playwright tests with fake providers; how
+   to run them; `npx deepspace logs`; the run_steps timeline
+10. How I worked with the agent: design docs → spike → one feature per
+    session → branch + PR → independent review session → I test, merge,
+    deploy. Link docs/agent-log.md, docs/prompts/, docs/token-usage.md
+    (8 sessions ≈ $10.6 API-equivalent, 95% cache reads)
+11. Known gaps & what's next (from docs 11, 12, 13), e.g. a brief sentence
+    can add a fact not in its card; ~100-room read limit; watch mode,
+    challenge-a-card, agent tools, DeepSpace integrations
+12. Run locally: npm install, `npx deepspace auth login`, `dev start`,
+    `test run all`, setting secrets via a pipe (never typed)
+
+Keep it to about 2–3 screens. Save this prompt as docs/prompts/08-readme.md.
+Add Session 08 to docs/agent-log.md; leave "What I verified myself" EMPTY.
+Commit (the secret check must pass), push, open a PR. Do NOT merge. STOP.
+</pasted_content id="d827">
+
+### 2026-11-22 18:29 · session 893d6dde
+
+
+<pasted_content id="d827">
+SESSION 08b: README: clarify DeepSpace integrations (planned vs used now).
+Follow CLAUDE.md (branch docs/readme-integrations, open a PR, don't merge).
+Docs only, no code changes. Verify every claim against the code
+(src/providers/, settings names, worker) before writing it.
+
+1. Add a README section "DeepSpace integrations: planned vs. used now" with
+   a short intro: my DeepSpace account had 0 credits, so the catalog
+   integrations couldn't be called; AI and search sit behind provider
+   interfaces and use free providers for now; switching is a config change.
+
+   Table: Need | Planned DeepSpace integration | Used now (free) | Why
+   - AI (plan searches, write cards, write brief) | anthropic/chat-completion
+     | Groq (openai/gpt-oss-20b), called directly | no credits; Groq free tier
+   - Research papers | scholar/search-papers | OpenAlex API (free key) | no credits
+   - Web / background search | exa/search | Wikipedia REST API (background only,
+     lower confidence) | no credits; Wikipedia is weaker than real web search
+   - (Future) Watch-mode email digest | email/send | not built | future feature
+
+2. A short "How the switch works" part (3–5 bullets): the LLMProvider /
+   SearchProvider interfaces, the setting names that choose the provider
+   (use the real names from the code), DeepSpace adapter classes that exist
+   as stubs marked "not tested: no DeepSpace credits", calls go through the
+   DeepSpace integrations proxy on the server and are billed to the app
+   owner's credits, and the priority if credits arrive (exa/search first for
+   real web search, then anthropic for card/brief writing).
+
+3. Make the README consistent: anywhere it lists "integrations", make sure
+   Groq / OpenAlex / Wikipedia are called "external free providers", NOT
+   DeepSpace integrations. Keep the separate "DeepSpace primitives used"
+   table as is.
+
+4. If docs/design/08-integrations.md says anything different, align it.
+
+Add Session 08b to docs/agent-log.md; leave "What I verified myself" EMPTY.
+Save this prompt as docs/prompts/08b-readme-integrations.md.
+Commit (the secret check must pass), push, open a PR. Do NOT merge. STOP.
+</pasted_content id="d827">
+
+### 2026-11-22 18:35 · session 893d6dde
+
+
+<pasted_content id="d827">
+CLEANUP ONLY: undo the 08b README session. This is housekeeping:
+- Do NOT add an agent-log entry, do NOT create a docs/prompts file, and
+  do NOT edit docs/prompts/prompt-log.md yourself.
+- No new docs, no code changes, no merge into main, no deploy.
+
+Steps:
+1. Show `git status` and `git branch --show-current`.
+2. Show `git diff docs/agent-log.md`. If the change is the 08b / "planned vs.
+   used now" / "0 credits" entry, discard it with `git restore
+   docs/agent-log.md`. If it contains anything else (e.g. my own "What I
+   verified myself" text for an earlier session), STOP and show me first.
+3. Keep the hook's docs/prompts/prompt-log.md changes: `git stash`, switch to
+   main, `git pull`, `git stash pop`, then commit only that file with
+   message "Update prompt log" and push. If stash pop conflicts, STOP.
+4. Close the 08b PR WITHOUT merging and delete its branch:
+   `gh pr close docs/readme-integrations --delete-branch`
+   then `git branch -D docs/readme-integrations` (ignore "not found").
+5. Confirm: current branch is main, `git status` is clean, `gh pr list`
+   no longer shows the 08b PR, and README.md on main does not contain the
+   08b "planned vs. used now" section.
+Report in 5 short lines, then STOP.
+</pasted_content id="d827">
+
