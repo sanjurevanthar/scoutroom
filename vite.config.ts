@@ -20,6 +20,13 @@ export default defineConfig({
     // the generated app and keep local dev/test startup deterministic.
     cloudflare({
       inspectorPort: false,
+      // Automated tests set SCOUTROOM_FAKE_PROVIDERS=1 (tests/playwright.config.ts): the worker then
+      // gets fake AI/search providers and never calls Groq, OpenAlex or Wikipedia. Unset otherwise,
+      // so dev, build and deploy keep the real providers from wrangler.toml.
+      config: (config) =>
+        process.env.SCOUTROOM_FAKE_PROVIDERS === '1'
+          ? { vars: { ...config.vars, LLM_PROVIDER: 'fake', SEARCH_PROVIDER: 'fake' } }
+          : {},
     }),
     // The app id `define`, the preview-secret cleanup, and the client dedupe
     // hint — all shipped by the SDK so a fix to any of them arrives with a

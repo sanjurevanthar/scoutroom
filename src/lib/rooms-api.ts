@@ -31,6 +31,8 @@ export const roomsApi = {
     callAction<{ userId: string }>('changeRole', { roomId, userId, role }),
   removeMember: (roomId: string, userId: string) =>
     callAction<{ userId: string }>('removeMember', { roomId, userId }),
+  startRun: (roomId: string) => callAction<{ runId: string }>('startRun', { roomId }),
+  stopRun: (runId: string) => callAction<{ runId: string }>('stopRun', { runId }),
 }
 
 export const inviteUrl = (token: string) => `${window.location.origin}/join/${token}`
