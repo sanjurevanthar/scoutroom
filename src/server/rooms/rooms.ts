@@ -127,6 +127,11 @@ export const removeMember: ActionHandler<Env> = async ({ userId, params, tools }
   if (isFail(target)) return fail('that person is not in this room')
 
   const removed = await tools.remove('team_members', target.recordId)
+  if (removed.success) {
+    // A person who left the room must stop counting toward Kept / Rejected.
+    const theirs = await tools.query<{ userId: string }>('votes', { where: { teamId: roomId, userId: targetId }, limit: 1000 })
+    if (theirs.success) for (const v of theirs.data.records) await tools.remove('votes', v.recordId)
+  }
   return removed.success ? { success: true, data: { userId: targetId } } : failFrom(removed, 'remove failed')
 }
 
