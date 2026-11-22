@@ -78,5 +78,9 @@ How I directed the coding agent, session by session. Each entry follows this tem
   - While capturing the real run, my throwaway script waited on a missing element, so the real pipeline ran 3 more times than the one asked for. Roughly 4 real runs in total, all within the free tiers. The throwaway script is deleted.
   - The pre-commit secret scan blocked a placeholder test key; renamed it rather than bypass the hook.
 - Not done / open: all 5 cards in the real run were papers (the model did not cite the Wikipedia background articles); no per-room spend view; stop on a running job takes effect at the next step boundary (up to one model call later); the `deepspace` provider stubs are untested.
-- What I verified myself:
+- What I verified myself: I tested it live on scoutroom.app.space with two
+  accounts (A in Chrome, B in a private window). As A, I ran the research
+  agent. The counter showed "1 / 5 runs used", and it gave me evidence cards
+  with a confidence percentage on each one. Then I made B a viewer, and the
+  "Run scout" button disappeared for B, as expected. No issues found.
 - Tokens / cost (from /cost): TODO
