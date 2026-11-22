@@ -49,5 +49,7 @@ How I directed the coding agent, session by session. Each entry follows this tem
   - Note: plain `npx deepspace test run` only runs smoke+api; the new specs need `run all`.
 - What I got wrong and fixed: first run of the direct-action test failed because the page was still on `about:blank` when calling `fetch('/api/auth/token')`; fixed by loading `/rooms` first. No production test hook was added: tests get a token from `/api/auth/token`.
 - Not done (later features): job room is still open to client enqueue (D4, F2); invite revoke/expiry UI and role-specific invite links; budget setting.
-- What I verified myself: _(to fill)_
+- What I verified myself: - What I verified myself: tested live on scoutroom.app.space with 2 accounts
+  (normal + private window): created room, joined by invite link, saw both
+  members online, changed role to viewer and it updated live. So far I don't see any issues.
 - Tokens / cost (from /cost): TODO
