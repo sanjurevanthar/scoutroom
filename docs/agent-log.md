@@ -31,3 +31,23 @@ How I directed the coding agent, session by session. Each entry follows this tem
 - What I verified / changed myself (addendum): `wrangler.toml` had the `__APP_ID__` placeholder; I ran `npx deepspace app init`, committed the real app id, set secrets via `npx deepspace secrets` (piped, never typed in chat), and deployed to https://scoutroom.app.space (logs show 200s).
 - What I changed or took over myself, and why: chose `scoutroom/` as the repo, narrowed the token report to daily totals (ccusage cannot filter by project, and session names would leak other projects).
 - Tokens / cost (from /cost): TODO
+
+---
+
+## Session 03: Feature 1, rooms, roles, invite links
+- Date/time: 2026-11-21
+- Goal: Rooms with per-room roles and invite links, on a clean branch `feat/rooms` (spike code reused only as a pattern, `spike/verify` not merged).
+- My prompt: Session 03 prompt (see [docs/prompts/prompt-log.md](prompts/prompt-log.md)).
+- What the agent did:
+  - Data (`src/schemas/rooms-schema.ts`): `rooms`, `team_members` (`uniqueOn teamId+userId`), `invites`. Room data reads use `read: 'team'` (`teamField: 'teamId'`); all client writes denied, so every write is a server action.
+  - Actions (`src/server/rooms/`): `createRoom`, `createInviteLink` (owner), `joinByInvite` (joins as researcher), `changeRole` (owner), `removeMember` (owner; owner cannot remove themselves or be demoted). Role checks live in `access.ts`. `src/actions/index.ts` imports only these files, so there is no import cycle with `action-routes.ts`.
+  - Screens: `/rooms` (list, empty/loading/error states), `/rooms/new`, `/rooms/:roomId` (question, members with roles, live presence via `usePresenceRoom`, empty board "Agent runs arrive in Feature 2"), `/join/:token`. `/home` now redirects to `/rooms`. No `deepspace add` feature fit (none covers rooms or roles), so the scaffold UI primitives were reused.
+  - Two deliberate differences from the prompt's field list, both following docs/design/06: `team_members.teamId` instead of `roomId` (DeepSpace's `'team'` rule requires `teamId`); the invite token lives in an owner-only `invites` collection, not on `rooms`, because `rooms` is readable by every member and a token there would reach viewers.
+- What I tested (`npx deepspace test run all`, 14 passed):
+  - Two-user Playwright: A creates a room, B joins by link, both lists show 2 members live, both show as online.
+  - Direct action calls: a non-member sees "not a member" and gets `not a member` from actions; researcher and viewer get `forbidden: role=...` from `createInviteLink`, `changeRole`, `removeMember`; owner cannot remove self or be demoted; bad role refused; invalid invite refused; a removed member loses access at once.
+  - Note: plain `npx deepspace test run` only runs smoke+api; the new specs need `run all`.
+- What I got wrong and fixed: first run of the direct-action test failed because the page was still on `about:blank` when calling `fetch('/api/auth/token')`; fixed by loading `/rooms` first. No production test hook was added: tests get a token from `/api/auth/token`.
+- Not done (later features): job room is still open to client enqueue (D4, F2); invite revoke/expiry UI and role-specific invite links; budget setting.
+- What I verified myself: _(to fill)_
+- Tokens / cost (from /cost): TODO
