@@ -53,3 +53,30 @@ How I directed the coding agent, session by session. Each entry follows this tem
   (normal + private window): created room, joined by invite link, saw both
   members online, changed role to viewer and it updated live. So far I don't see any issues.
 - Tokens / cost (from /cost): TODO
+
+---
+
+## Session 04: Feature 2, live agent run
+- Date/time: 2026-11-21
+- Goal: A researcher clicks "Run scout"; everyone in the room watches plan, search and cards appear live. Branch `feat/agent-run`.
+- My prompt: Session 04 prompt (see [docs/prompts/prompt-log.md](prompts/prompt-log.md)).
+- What the agent did:
+  - Providers (`src/providers/`): `LLMProvider.complete(messages, schema)` and `SearchProvider.search(query)`; `GroqProvider` (model `openai/gpt-oss-20b`, JSON mode, 429 backoff then "rate limited, try again"), `OpenAlexSearch` (key as `api_key`, never in an error), `WikipediaSearch`, `FakeLLM`/`FakeSearch`, DeepSpace stubs marked "not tested: no DeepSpace credits". Chosen by `LLM_PROVIDER` / `SEARCH_PROVIDER` (`wrangler.toml` `[vars]`, not secret).
+  - Data (`src/schemas/runs-schema.ts`): `runs`, `run_steps` (`uniqueOn runId+seq`), `cards`, plus `run_locks` (`uniqueOn teamId`; needed for the one-run lock, from doc 06). Reads are `'team'`; all client writes denied.
+  - Actions (`src/server/runs/actions.ts`): `startRun` (owner/researcher; provider config check; lock; run limit checked under the lock; enqueue; refunds the run if enqueue fails) and `stopRun` (sets `stopped`; the job frees the lock on its next tick).
+  - Job room locked (D4): `authorizeWrite` always false, so only `startRun` can enqueue. Each room has its own job scope, so rooms do not queue behind each other.
+  - Job `scout-run` (`src/server/runs/pipeline.ts`): one step per tick via `ctx.continue`; steps Planning, Searching papers, Checking background, Writing cards, each saved as a `run_steps` record. Budget 8 tool calls (LLM + search; a normal run uses 5). Cards: zod strict, 3-6 cards, `sourceUrl` must be one we supplied, title and type come from our search hit (not the model), Wikipedia confidence capped at 0.6, one repair attempt, then fail with a plain message. Injection guard in the system prompt; results fenced in `<sources>`.
+  - UI: `ScoutBoard` on the room page: Run button (hidden for viewers, disabled during a run or at the limit), "n / 5 runs used", live step timeline, Stop, card grid, empty / loading / failed / limit states.
+- Where I deviated from the docs: card shape follows the prompt (`paper|background`, confidence 0-1), not doc 07 (`web|paper`, low/medium/high). "Tool calls" count LLM and search calls together. A bad plan falls back to searching with the question instead of failing.
+- What I tested (`npx deepspace test run all`: 50 unit + 18 Playwright passed; automated tests use fake providers only):
+  - Unit: card validation (bad JSON, made-up URL, lookalike URL, extra keys, too few/many cards), provider contract (Groq, OpenAlex, Wikipedia, fakes, 429 backoff, key never in an error), pipeline with fakes (repair, budget, stop, failures, retried step).
+  - Two-user e2e: A runs the scout, B sees steps and cards appear live; stop; failed run shows its message and frees the lock.
+  - Server: viewer's `startRun` refused; second and simultaneous `startRun` refused; client enqueue to the job room refused; run limit (5 of 5) enforced.
+  - One real run locally (Groq + OpenAlex + Wikipedia): done in about 5 s, 4 steps, 5 cards, all from real OpenAlex papers.
+- What went wrong and was fixed:
+  - My first attempt to switch tests to fake providers (process env) did not reach the worker, so one full e2e run made real Groq/OpenAlex calls. Fixed by `SCOUTROOM_FAKE_PROVIDERS=1` in `tests/playwright.config.ts`, read by `vite.config.ts` (unset for dev, build and deploy). Confirmed fake mode with the `[fake:429]` marker before re-running.
+  - While capturing the real run, my throwaway script waited on a missing element, so the real pipeline ran 3 more times than the one asked for. Roughly 4 real runs in total, all within the free tiers. The throwaway script is deleted.
+  - The pre-commit secret scan blocked a placeholder test key; renamed it rather than bypass the hook.
+- Not done / open: all 5 cards in the real run were papers (the model did not cite the Wikipedia background articles); no per-room spend view; stop on a running job takes effect at the next step boundary (up to one model call later); the `deepspace` provider stubs are untested.
+- What I verified myself:
+- Tokens / cost (from /cost): TODO

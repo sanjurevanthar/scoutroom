@@ -73,7 +73,7 @@ const STEP_LABEL: Record<StepName, string> = {
   cards: 'Writing cards',
 }
 
-const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`
+const plural = (n: number, word: string, many = `${word}s`) => `${n} ${n === 1 ? word : many}`
 
 /** Runs one step. Returns the next state, or null when the run has ended. */
 export async function runTick(state: RunState, deps: PipelineDeps): Promise<RunState | null> {
@@ -107,7 +107,7 @@ export async function runTick(state: RunState, deps: PipelineDeps): Promise<RunS
         // A bad plan is not worth failing the run: search with the question itself.
         const used: Plan = plan ?? { paperQueries: [state.question.slice(0, 200)], backgroundQuery: state.question.slice(0, 200) }
         detail = plan
-          ? `${plural(used.paperQueries.length, 'paper query')} + 1 background query`
+          ? `${plural(used.paperQueries.length, 'paper query', 'paper queries')} + 1 background query`
           : 'Plan was unclear, searching with the question itself'
         next = { ...next, step: 'papers', plan: used }
         break
