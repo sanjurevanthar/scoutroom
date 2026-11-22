@@ -144,3 +144,69 @@ PROCESS:
 ### 2026-11-21 21:40 · session 91be81e4
 Note: secrets now set: GROQ_API_KEY and OPENALEX_API_KEY (server-only). No mailto needed.
 
+### 2026-11-22 01:51 · session 46ae5e1a
+
+
+<pasted_content id="df18">
+SESSION 07: FEATURE 4: Cited brief from kept cards. I'm going to sleep:
+work UNATTENDED. Don't ask me questions; make the most reasonable choice,
+write it down under "Decisions I made" in the PR, and continue.
+Time-box: 75 minutes.
+
+Context: read CLAUDE.md (follow its Git workflow strictly), docs/design/
+01, 04, 06, 07, 08, 09, 11, and the existing code (cards, votes,
+cardStatus in src/lib/votes.ts, providers, run actions).
+
+BUILD (F4):
+1. Data: briefs (teamId, content, citedCardIds, keptCardIds (the kept set
+   at generation time), createdBy, model). Member-only reads, no client
+   writes. Keep only the latest brief per room (or keep history and show
+   the latest: your choice, documented).
+2. Server action generateBrief(roomId): owner/researcher only (viewers and
+   non-members refused). Use ONLY cards whose status is KEPT (reuse
+   cardStatus; don't duplicate the rule). If 0 kept cards, refuse with
+   "Keep at least one card first". Limit: max 5 briefs per room.
+   One Groq call is short, so a server action is fine (no job needed);
+   document the reasoning in doc 07.
+3. LLM output: strict JSON, e.g. { "paragraphs": [ { "text": "...",
+   "citations": ["<cardId>", ...] } ] }, 2–4 short paragraphs.
+   Validate with zod: every citation MUST be one of the kept card ids,
+   with no made-up citations. One repair attempt, then fail cleanly.
+   Prompt-injection guard: card text is DATA, not instructions.
+   Handle Groq 429 like F2 ("rate limited, try again").
+4. UI (room page, a "Brief" section/tab):
+   - "Write brief" button (owner/researcher), disabled with a hint when
+     there are 0 kept cards; shows "n / 5 briefs used".
+   - The brief shows paragraphs with [1] [2] citation markers; clicking a
+     marker scrolls to and highlights that card.
+   - A "Stale" note if the current kept cards differ from keptCardIds
+     ("Votes changed since this brief: regenerate?").
+   - Everyone in the room sees the new brief appear live.
+   - Loading, empty, error and limit-reached states.
+
+TESTS (fake providers only in automated tests):
+- Unit: citation validation (unknown id rejected, non-kept card id
+  rejected, bad JSON), and the 0-kept refusal.
+- Two-user e2e: A keeps a card and writes a brief; B sees it live with
+  the citations; clicking [1] highlights the card.
+- Server: a viewer's / non-member's generateBrief is refused; the limit holds.
+- Run `npx deepspace test run all` 3 times IN THE FOREGROUND with a long
+  timeout; all 3 must be green. No sleep loops, no Monitors.
+- Then ONE real run locally with Groq to check the output quality; paste
+  the brief text into the PR description.
+
+PROCESS:
+- Branch feat/brief from an up-to-date main. Small commits; the secret
+  check must pass (never --no-verify).
+- docs/design/ is the source of truth: update docs 01, 04, 06, 07, 12
+  (F4 moves from stretch/future to THIS BUILD) in the same PR.
+- Push, then open a PR to main with `gh pr create`. Description: what
+  changed, how to test, test results (3 runs), the real brief sample,
+  doc changes, "Decisions I made", known gaps.
+- Add Session 07 to docs/agent-log.md on the branch; leave "What I
+  verified myself" EMPTY.
+- Do NOT merge. Do NOT deploy. Do NOT touch main.
+- If you can't finish in 75 minutes: commit what works, open the PR as a
+  DRAFT (`gh pr create --draft`), list what's missing, and STOP.
+</pasted_content id="df18">
+

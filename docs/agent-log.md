@@ -155,3 +155,20 @@ How I directed the coding agent, session by session. Each entry follows this tem
   merged only after the 3 green test runs, then checked the voting behaviour
   live with two accounts (see Session 05).
 - Tokens / cost (from /cost): TODO
+
+---
+
+## Session 07: Feature 4, cited brief from kept cards
+- Date/time: 2026-11-22
+- Goal: Build F4 unattended on `feat/brief`: `briefs` collection, `generateBrief` action (owner/researcher, kept cards only, strict JSON, validated citations), Brief section with live updates and a Stale note, docs 01/02/04/05/06/07/10/11/12 updated. No merge, no deploy.
+- My prompt: Session 07 prompt (see [docs/prompts/prompt-log.md](prompts/prompt-log.md)).
+- What the agent did:
+  - Data and server: `briefs` schema (members read, no client writes, `uniqueOn teamId+seq`); `src/lib/brief.ts` (`keptCardIds` built on `tally`/`cardStatus`, so the kept rule is not duplicated); `src/server/briefs/{actions,parse,prompts}.ts`; `getLlm` split out of `getProviders`; FakeLLM answers the `brief` schema.
+  - UI: `BriefPanel` above the board (Write brief, `n / 5 briefs used`, `[n]` markers that scroll to and highlight the card, Stale note, loading/empty/error/limit states).
+  - Tests: 23 new unit tests (parse, kept rule, action with fake tools), 2 two-user e2e tests.
+  - Docs: see the PR "Doc changes" list; decision D13 added in doc 11.
+- Decisions: listed in the PR under "Decisions I made".
+- Test results (`npx deepspace test run all`, foreground, 3 runs): 3 of 3 green (85 unit + 23 Playwright each time).
+- Real Groq run (local, one run): the brief followed the cards and every citation was valid; one sentence added a little outside colour ("integrates with the MongoDB ecosystem"). The brief text is in the PR.
+- What I verified myself:
+- Tokens / cost (from /cost): TODO
