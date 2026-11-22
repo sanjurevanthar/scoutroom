@@ -54,7 +54,7 @@ Details: [docs/design/05-architecture.md](docs/design/05-architecture.md).
 
 ## Main tradeoff
 
-My DeepSpace account has 0 credits, so the DeepSpace `anthropic`, `exa` and `scholar` integrations were not usable. The agent talks to two small interfaces, `LLMProvider` and `SearchProvider`. Today they use **Groq** (free tier, my own key), **OpenAlex** (papers) and **Wikipedia** (background). Switching to DeepSpace is a config change (`LLM_PROVIDER` / `SEARCH_PROVIDER` in `wrangler.toml`), with no agent change. The price: Wikipedia is a weak web source, so cards are mostly background and papers. See [docs/design/08-integrations.md](docs/design/08-integrations.md).
+My DeepSpace account has 500 free credits. This build still does not use the DeepSpace `anthropic`, `exa` and `scholar` integrations: they are untested here, and I kept the build on providers I had already checked. The agent talks to two small interfaces, `LLMProvider` and `SearchProvider`. Today they use **Groq** (free tier, my own key), **OpenAlex** (papers) and **Wikipedia** (background). Switching to DeepSpace is a config change (`LLM_PROVIDER` / `SEARCH_PROVIDER` in `wrangler.toml`), with no agent change. The price: Wikipedia is a weak web source, so cards are mostly background and papers. See [docs/design/08-integrations.md](docs/design/08-integrations.md).
 
 Left out on purpose: payments (no paying user), `fal` images (decoration), `email` + `cron` (watch mode, later), `google/*` export (needs per-user OAuth).
 

@@ -326,3 +326,8 @@ Steps:
 Report in 5 short lines, then STOP.
 </pasted_content id="d827">
 
+### 2026-11-22 18:40 · session 284cf9cf
+Note: README.md is now on main (PR #9). It still says "0 credits": that's
+wrong (I have 500 free credits). An earlier 08b session was closed without
+merging. This session replaces it and must correct the README.
+

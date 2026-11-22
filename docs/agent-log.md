@@ -240,3 +240,17 @@ How I directed the coding agent, session by session. Each entry follows this tem
 - Test results: not run (docs only, no code changed).
 - What I verified myself:
 - Tokens / cost (from /cost): see [token-usage.md](token-usage.md) (no row for this session yet)
+
+---
+
+## Session 08b: Correct the credits line in the README
+- Date/time: 2026-11-22
+- Goal: Fix the README claim "0 credits" (I have 500 free credits) on `docs/readme-credits-fix`. Replaces an earlier 08b session that was closed without merging. No merge, no deploy.
+- My prompt: summary in [docs/prompts/prompt-log.md](prompts/prompt-log.md) (entry for session 284cf9cf).
+- What the agent did:
+  - Changed one sentence in the README "Main tradeoff" section: the account has 500 free credits; the DeepSpace `anthropic`, `exa`, `scholar` integrations are simply not used or tested in this build.
+  - Left docs/design/ unchanged; it still says "0 credits" in several places (see PR known gaps).
+- Decisions: did not invent a reason for the original provider choice; the new text says only what is known (untested here, kept on providers already checked).
+- Test results: `npx deepspace test run`: 8 of 8 passed (docs only, no code changed).
+- What I verified myself:
+- Tokens / cost (from /cost): see [token-usage.md](token-usage.md) (no row for this session yet)
