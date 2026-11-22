@@ -240,3 +240,21 @@ How I directed the coding agent, session by session. Each entry follows this tem
 - Test results: not run (docs only, no code changed).
 - What I verified myself:
 - Tokens / cost (from /cost): see [token-usage.md](token-usage.md) (no row for this session yet)
+
+---
+
+## Session 08b: README, DeepSpace integrations planned vs. used now
+- Date/time: 2026-11-22
+- Goal: Make clear that Groq, OpenAlex and Wikipedia are external free providers, not DeepSpace integrations, on `docs/readme-integrations`. Docs only. No merge, no deploy.
+- My prompt: [docs/prompts/08b-readme-integrations.md](prompts/08b-readme-integrations.md).
+- What the agent did:
+  - Checked `src/providers/` (`index.ts`, `deepspace.ts`, `groq.ts`, `openalex.ts`, `wikipedia.ts`), `worker.ts` and `wrangler.toml`.
+  - Added the section "DeepSpace integrations: planned vs. used now" with the table and "How the switch works" to `README.md`; moved the tradeoff text into it.
+  - Aligned `docs/design/08-integrations.md`.
+- Findings that differ from my prompt:
+  - "Switching is a config change" is only half true: `DeepSpaceLLM` and `DeepSpaceSearch` are stubs that throw `not tested: no DeepSpace credits`. The settings (`LLM_PROVIDER`, `SEARCH_PROVIDER`) and the agent are ready, but the real proxy adapters are not written. README and doc 08 now say so.
+  - OpenAlex's key is optional (`OPENALEX_API_KEY`, sent as `api_key` if set); the code has no `OPENALEX_MAILTO`, so doc 08 no longer mentions it.
+- Decisions: this branch is stacked on `docs/readme` (PR #9), because README.md is not on `main` yet; the PR targets `docs/readme`.
+- Test results: not run (docs only, no code changed).
+- What I verified myself:
+- Tokens / cost (from /cost): see [token-usage.md](token-usage.md) (no row for this session yet)

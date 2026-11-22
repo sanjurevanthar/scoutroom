@@ -52,9 +52,30 @@ flowchart LR
 
 Details: [docs/design/05-architecture.md](docs/design/05-architecture.md).
 
+## DeepSpace integrations: planned vs. used now
+
+My DeepSpace account had 0 credits, so the catalog integrations could not be called. The agent talks to two small interfaces (`LLMProvider`, `SearchProvider`), and for now they use **external free providers**. These are **not** DeepSpace integrations: the worker calls them directly with plain `fetch`.
+
+| Need | Planned DeepSpace integration | Used now (free) | Why |
+|---|---|---|---|
+| AI (plan searches, write cards, write brief) | `anthropic/chat-completion` | Groq (`openai/gpt-oss-20b`), called directly | No credits; Groq free tier |
+| Research papers | `scholar/search-papers` | OpenAlex API (free; optional key `OPENALEX_API_KEY`) | No credits |
+| Web / background search | `exa/search` | Wikipedia REST API (background only, lower confidence) | No credits; Wikipedia is weaker than real web search |
+| (Future) Watch-mode email digest | `email/send` | Not built | Future feature |
+
+### How the switch works
+
+- The agent only sees `LLMProvider` and `SearchProvider` (`src/providers/types.ts`). It never sees vendor fields.
+- Two non-secret settings in `wrangler.toml` choose the provider: `LLM_PROVIDER` (`groq` default, `deepspace`, `fake`) and `SEARCH_PROVIDER` (`free` default, `deepspace`, `fake`). `fake` is for tests.
+- The DeepSpace adapters (`DeepSpaceLLM`, `DeepSpaceSearch` in `src/providers/deepspace.ts`) exist only as **stubs**: they throw `not tested: no DeepSpace credits`. So the settings are in place and the agent needs no change, but the real proxy calls are still to be written and tested once credits exist.
+- Planned calls go through the DeepSpace integrations proxy from the server, and are billed to the app owner's credits.
+- Priority when credits arrive: `exa/search` first (real web search), then `anthropic/chat-completion` for card and brief writing, then `scholar/search-papers`.
+
+Details: [docs/design/08-integrations.md](docs/design/08-integrations.md).
+
 ## Main tradeoff
 
-My DeepSpace account has 0 credits, so the DeepSpace `anthropic`, `exa` and `scholar` integrations were not usable. The agent talks to two small interfaces, `LLMProvider` and `SearchProvider`. Today they use **Groq** (free tier, my own key), **OpenAlex** (papers) and **Wikipedia** (background). Switching to DeepSpace is a config change (`LLM_PROVIDER` / `SEARCH_PROVIDER` in `wrangler.toml`), with no agent change. The price: Wikipedia is a weak web source, so cards are mostly background and papers. See [docs/design/08-integrations.md](docs/design/08-integrations.md).
+Free providers instead of DeepSpace integrations: no bill, but Groq has rate limits and Wikipedia is a weak web source, so cards are mostly background and papers.
 
 Left out on purpose: payments (no paying user), `fal` images (decoration), `email` + `cron` (watch mode, later), `google/*` export (needs per-user OAuth).
 

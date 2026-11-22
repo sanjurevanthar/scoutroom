@@ -1,6 +1,6 @@
 # 08 · Providers and Integrations
 
-> **In simple words:** The agent needs an AI model and a search source. The owner's DeepSpace account has 0 credits, so for now we use the owner's own Groq key and two free search sources. The agent only talks to two small interfaces, so later we can switch to DeepSpace's Anthropic, Exa and Scholar integrations by changing a setting, with no change to the agent code.
+> **In simple words:** The agent needs an AI model and a search source. The owner's DeepSpace account has 0 credits, so for now we use the owner's own Groq key and two free search sources. The agent only talks to two small interfaces, so the agent code does not change when we later move to DeepSpace's Anthropic, Exa and Scholar integrations. Today Groq, OpenAlex and Wikipedia are **external free providers**, not DeepSpace integrations. The settings exist, but the DeepSpace adapters are **stubs** (they throw `not tested: no DeepSpace credits`), so the switch also needs the real proxy calls to be written and tested.
 
 All AI and search calls run on the **server**. Never in the browser.
 
@@ -39,7 +39,7 @@ Rules: adapters **normalize** vendor output into these shapes. The agent, valida
 
 ## Implementations
 
-| Interface | Now (**[THIS BUILD]**) | Later (**[FUTURE]**, one config change) |
+| Interface | Now (**[THIS BUILD]**) | Later (**[FUTURE]**, setting + real adapter) |
 |---|---|---|
 | `LLMProvider` | `GroqProvider`: Groq API (OpenAI-compatible, `https://api.groq.com/openai/v1`) with the owner's key | `DeepSpaceAnthropicProvider`: `anthropic/chat-completion` (Haiku) |
 | `SearchProvider` (papers) | `OpenAlexProvider`: OpenAlex Works search (free) | `ScholarProvider`: `scholar/search-papers` |
@@ -54,7 +54,7 @@ Two **non-secret** settings in the worker config (`wrangler.toml` `[vars]`), rea
 | `LLM_PROVIDER` | `groq` / `deepspace` | `groq` |
 | `SEARCH_PROVIDER` | `free` / `deepspace` | `free` |
 
-The **secret** (`GROQ_API_KEY`; also `OPENALEX_MAILTO` for OpenAlex polite use) lives only in the DeepSpace secrets store (`npx deepspace secrets set ...`), never in `wrangler.toml`, code, `.dev.vars` committed files, or git. If the chosen provider's secret is missing, `startRun` refuses early (see [07](07-agent-run-design.md)).
+The **secret** (`GROQ_API_KEY`; plus an optional `OPENALEX_API_KEY` for OpenAlex, which also works without a key) lives only in the DeepSpace secrets store (`npx deepspace secrets set ...`), never in `wrangler.toml`, code, `.dev.vars` committed files, or git. If the chosen provider's secret is missing, `startRun` refuses early (see [07](07-agent-run-design.md)).
 *Sources: https://docs.deep.space/concepts/deployment#secrets-come-from-the-store-not-from-dev-vars, https://docs.deep.space/cli-reference/commands#secrets.*
 
 The two settings are independent: you can use Groq with DeepSpace search, or the reverse.
@@ -91,7 +91,9 @@ Facts from `npx deepspace integrations info <name>` (full list: `npx deepspace i
 
 Called from the worker through the proxy as the app owner; billing follows `src/integrations.ts` (unlisted integrations default to developer billing). *Sources: `src/integrations.ts`, https://docs.deep.space/guides/server-actions#integration-calls---billing-routing, https://docs.deep.space/sdk-reference/worker/cron#buildcroncontext-env-owneruserid-roomid.*
 
-**Switch checklist (when credits exist):** top up credits; set `LLM_PROVIDER=deepspace` and/or `SEARCH_PROVIDER=deepspace`; run the provider contract tests (see [10](10-testing-plan.md)); check `npx deepspace app usage`. No schema or UI change.
+**Status:** `DeepSpaceLLM` and `DeepSpaceSearch` (`src/providers/deepspace.ts`) are stubs that throw `not tested: no DeepSpace credits`; calls would go through the integrations proxy from the server, billed to the app owner's credits. Suggested order: `exa/search`, then `anthropic/chat-completion`, then `scholar/search-papers`.
+
+**Switch checklist (when credits exist):** top up credits; implement and test the real adapter(s); set `LLM_PROVIDER=deepspace` and/or `SEARCH_PROVIDER=deepspace`; run the provider contract tests (see [10](10-testing-plan.md)); check `npx deepspace app usage`. No schema or UI change.
 
 ## Left out on purpose
 
