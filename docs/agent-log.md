@@ -84,3 +84,24 @@ How I directed the coding agent, session by session. Each entry follows this tem
   with a confidence percentage on each one. Then I made B a viewer, and the
   "Run scout" button disappeared for B, as expected. No issues found.
 - Tokens / cost (from /cost): TODO
+
+---
+
+## Session 05: Feature 3, team votes on cards (+ docs sync from F2)
+- Date/time: 2026-11-22
+- Goal: Owners and researchers keep or reject evidence cards; everyone sees live counts and a Kept / Rejected / Undecided status. Branch `feat/votes`, PR to main (not merged, not deployed).
+- My prompt: Session 05 prompt (see [docs/prompts/prompt-log.md](prompts/prompt-log.md)).
+- What the agent did:
+  - Part 0 (own commit): synced docs 06 and 07 with F2 (card shape `paper|background` + confidence 0-1, `run_locks` and why it exists, bad plan falls back to searching with the question, stop takes effect at the next step boundary, tests use fake providers via `SCOUTROOM_FAKE_PROVIDERS`); added the "F2 was auto-merged" note to doc 11 as D11.
+  - Data: `votes` collection (`teamId`, `cardId`, `userId`, `value keep|reject`), `uniqueOn cardId+userId`, member-only reads, all client writes denied.
+  - Action `castVote(cardId, value | null)`: room is taken from the card, caller must be a member and owner/researcher (viewers refused); null removes the vote; a changed vote updates the same row; a create refused by `uniqueOn` (two clicks at once) falls back to an update.
+  - The kept rule is one pure function, `cardStatus` in `src/lib/votes.ts` (with `tally`), used by the UI. Counts and status are computed live from `votes`, not stored on cards.
+  - UI: Keep / Reject buttons (my vote highlighted, click again to undo), `👍 n · 👎 n`, status badge, filter tabs All / Kept / Undecided / Rejected with counts, "Voting failed, try again." and an empty-filter message. Viewers see counts and status but no buttons.
+- Where I deviated from the docs: doc 06 had `choice` and stored `keepCount`/`rejectCount`/`decision` on the card. I used `value` (as in the prompt) and compute counts instead of storing them, so they cannot drift. Doc 06 and 07 are updated in this PR.
+- What I tested (`npx deepspace test run all`; fake providers only, no real API calls):
+  - Unit: the kept rule (no votes, ties, only rejects, one-vote margins) and `tally`; 62 unit tests pass in total.
+  - Two-user e2e: A and B vote on one card; counts, status and highlight update live on both screens; B's changed vote replaces their earlier one and A sees it; undo; filter tab counts.
+  - Server: viewer's `castVote` refused; non-member's refused; unknown card refused; bad value refused; the same vote twice and two simultaneous votes by one person still count once.
+- Known gap: some older Playwright tests are timing-sensitive and failed intermittently when the whole suite ran together with the new votes spec (API status page "Loading..." check, run-limit lock polling). Each failure was in a different test and the next run passed; two runs on `main` passed. Not fixed in this PR.
+- What I verified myself:
+- Tokens / cost (from /cost): TODO

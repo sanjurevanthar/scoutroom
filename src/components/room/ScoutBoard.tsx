@@ -3,11 +3,17 @@
  * Everything comes from live queries, so every member watches a run as it happens.
  */
 import { useState } from 'react'
-import { useQuery } from 'deepspace'
+import { useAuth, useQuery } from 'deepspace'
 import { Badge, Button, EmptyState } from '@/components/ui'
 import { roomsApi } from '@/lib/rooms-api'
 import type { RoomRecord, RoomRole } from '@/lib/room-types'
 import type { CardRecord, RunRecord, RunStepRecord } from '@/lib/run-types'
+import { tally } from '@/lib/votes'
+import type { CardStatus, VoteRecord } from '@/lib/votes'
+import { CardVotes, STATUS_LABEL } from './CardVotes'
+
+type Filter = 'all' | CardStatus
+const FILTERS: Filter[] = ['all', 'kept', 'undecided', 'rejected']
 
 interface ScoutBoardProps {
   roomId: string
@@ -20,6 +26,10 @@ export function ScoutBoard({ roomId, room, role }: ScoutBoardProps) {
   const latest = runs.records[0]
   const steps = useQuery<RunStepRecord>('run_steps', { where: { runId: latest?.recordId ?? '-' } })
   const cards = useQuery<CardRecord>('cards', { where: { teamId: roomId }, orderBy: 'createdAt', orderDir: 'desc' })
+
+  const votes = useQuery<VoteRecord>('votes', { where: { teamId: roomId } })
+  const { userId } = useAuth()
+  const [filter, setFilter] = useState<Filter>('all')
 
   const [starting, setStarting] = useState(false)
   const [stopping, setStopping] = useState(false)
@@ -49,6 +59,22 @@ export function ScoutBoard({ roomId, room, role }: ScoutBoardProps) {
 
   const orderedSteps = [...steps.records].sort((a, b) => a.data.seq - b.data.seq)
   const loading = runs.status === 'loading' || cards.status === 'loading'
+
+  // Counts and status come from the votes, live, through the one rule in lib/votes.ts.
+  const votesByCard = new Map<string, VoteRecord[]>()
+  for (const v of votes.records) {
+    const list = votesByCard.get(v.data.cardId) ?? []
+    list.push(v.data)
+    votesByCard.set(v.data.cardId, list)
+  }
+  const rows = cards.records.map((c) => ({ card: c, tally: tally(votesByCard.get(c.recordId) ?? [], userId) }))
+  const counts: Record<Filter, number> = {
+    all: rows.length,
+    kept: rows.filter((r) => r.tally.status === 'kept').length,
+    undecided: rows.filter((r) => r.tally.status === 'undecided').length,
+    rejected: rows.filter((r) => r.tally.status === 'rejected').length,
+  }
+  const visible = rows.filter((r) => filter === 'all' || r.tally.status === filter)
 
   return (
     <section className="space-y-6" aria-label="Scout board">
@@ -129,10 +155,37 @@ export function ScoutBoard({ roomId, room, role }: ScoutBoardProps) {
           />
         </div>
       )}
+      {votes.status === 'error' && (
+        <p role="alert" className="text-sm text-destructive" data-testid="votes-error">
+          Could not load votes. {votes.error}
+        </p>
+      )}
       {cards.records.length > 0 && (
+        <div role="tablist" aria-label="Filter cards" className="flex flex-wrap gap-2" data-testid="card-filters">
+          {FILTERS.map((f) => (
+            <Button
+              key={f}
+              role="tab"
+              size="sm"
+              variant={filter === f ? 'default' : 'outline'}
+              aria-selected={filter === f}
+              onClick={() => setFilter(f)}
+              data-testid={`filter-${f}`}
+            >
+              {f === 'all' ? 'All' : STATUS_LABEL[f]} ({counts[f]})
+            </Button>
+          ))}
+        </div>
+      )}
+      {cards.records.length > 0 && visible.length === 0 && (
+        <p className="text-sm text-muted-foreground" data-testid="filter-empty">
+          No {filter} cards yet.
+        </p>
+      )}
+      {visible.length > 0 && (
         <ul className="grid gap-3 sm:grid-cols-2" data-testid="card-grid">
-          {cards.records.map((c) => (
-            <li key={c.recordId} className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4" data-testid="card">
+          {visible.map(({ card: c, tally: t }) => (
+            <li key={c.recordId} className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4" data-testid="card" data-card-id={c.recordId}>
               <p className="text-sm" data-testid="card-claim">{c.data.claim}</p>
               <a
                 href={c.data.sourceUrl}
@@ -151,6 +204,7 @@ export function ScoutBoard({ roomId, room, role }: ScoutBoardProps) {
                   confidence {Math.round(c.data.confidence * 100)}%
                 </span>
               </div>
+              <CardVotes cardId={c.recordId} tally={t} canVote={canRun} />
             </li>
           ))}
         </ul>

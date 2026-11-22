@@ -1,6 +1,7 @@
 /** Client for the room server actions. Every call goes through /api/actions/:name. */
 import { getAuthToken } from 'deepspace'
 import type { AssignableRole } from './room-types'
+import type { VoteValue } from './votes'
 
 export type ActionResponse<T> = { success: true; data: T } | { success: false; error: string }
 
@@ -33,6 +34,8 @@ export const roomsApi = {
     callAction<{ userId: string }>('removeMember', { roomId, userId }),
   startRun: (roomId: string) => callAction<{ runId: string }>('startRun', { roomId }),
   stopRun: (runId: string) => callAction<{ runId: string }>('stopRun', { runId }),
+  castVote: (cardId: string, value: VoteValue | null) =>
+    callAction<{ cardId: string; value: VoteValue | null }>('castVote', { cardId, value }),
 }
 
 export const inviteUrl = (token: string) => `${window.location.origin}/join/${token}`
