@@ -3,8 +3,8 @@
 # other projects' names, which must not reach a public repo.
 set -u
 root="$(cd "$(dirname "$0")/.." && pwd)"
-out="$root/docs/token-report.md"
-mkdir -p "$root/docs"
+out="${TOKEN_REPORT_OUT:-$HOME/.claude/scoutroom-reference/token-report.md}"
+mkdir -p "$(dirname "$out")"
 scrub() {  # secrets, then local usernames in paths
   "$root/scripts/redact.sh" | sed -E 's#/Users/[^/ ]+#/Users/<user>#g; s#-Users-[A-Za-z0-9_.]+-#-Users-<user>-#g'
 }

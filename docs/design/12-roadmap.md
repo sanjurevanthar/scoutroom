@@ -15,7 +15,7 @@
 | 6 | **Agent tools via `registerAgent`** (F7) | Lets my own coding agent query a room (read cards, kept items). | `registerAgent` in `src/ai/agent.ts`; `npx deepspace agent tools` / `agent invoke` (per `AGENTS.md`) |
 | 7 | **Export brief to Google Docs** (F8) | Handy for sharing outside the team. | `google/*` integrations with **user** billing and per-user OAuth consent |
 
-Sources: `docs/catalog-features.txt` (`documents`, `cron`), `docs/catalog-integrations.txt` (`email`, `google`), `AGENTS.md` (agent tools), https://docs.deep.space/guides/scheduled-jobs.
+Sources: `npx deepspace add --list` (`documents`, `cron`), `npx deepspace integrations list` (`email`, `google`), `AGENTS.md` (agent tools), https://docs.deep.space/guides/scheduled-jobs.
 
 ## Why this order
 
