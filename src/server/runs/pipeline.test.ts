@@ -185,6 +185,38 @@ describe('scout pipeline', () => {
     expect(store.lock).toBeNull()
   })
 
+  it('reaped as failed while the model writes cards: nothing saved, stays failed, new run lock untouched', async () => {
+    const respond = async (m: any, s: any) => {
+      if (s?.name === 'cards') await slow.store.updateRun(RUN, { status: 'failed', error: 'Run stopped responding: marked as failed' })
+      return defaultFakeResponder(m, s)
+    }
+    const slow: ReturnType<typeof setup> = setup({ respond })
+    slow.store.lock = { teamId: TEAM, runId: 'a-newer-run' }
+    await runAll(slow)
+    expect(slow.store.runs.get(RUN)).toMatchObject({ status: 'failed', error: 'Run stopped responding: marked as failed' })
+    expect(slow.store.cards).toHaveLength(0)
+    expect(slow.store.lock?.runId).toBe('a-newer-run')
+  })
+
+  it('a job that resumes after the run was reaped stops at the next step boundary', async () => {
+    const ctx = setup()
+    ctx.store.lock = { teamId: TEAM, runId: 'a-newer-run' }
+    await runAll(ctx, ctx.state, async (n) => {
+      if (n === 1) await ctx.store.updateRun(RUN, { status: 'failed', error: 'Run stopped responding: marked as failed' })
+    })
+    expect(ctx.store.steps).toHaveLength(1) // only the step that was already running
+    expect(ctx.store.runs.get(RUN)!.status).toBe('failed')
+    expect(ctx.store.cards).toHaveLength(0)
+    expect(ctx.store.lock?.runId).toBe('a-newer-run')
+  })
+
+  it('writes a heartbeat (lastProgressAt) while the run progresses', async () => {
+    const ctx = setup()
+    const before = Date.now()
+    await runAll(ctx)
+    expect(ctx.store.runs.get(RUN)!.lastProgressAt).toBeGreaterThanOrEqual(before)
+  })
+
   it('never exceeds the tool-call budget', async () => {
     // Already at 7 of 8 when cards starts: the first cards call fits, the repair call does not.
     const ctx = setup({

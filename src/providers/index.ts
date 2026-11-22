@@ -13,6 +13,8 @@ export interface ProviderEnv {
   GROQ_API_KEY?: string
   GROQ_MODEL?: string
   OPENALEX_API_KEY?: string
+  /** Not secret. Milliseconds without progress before a run counts as stuck (default 180000). */
+  STALE_RUN_MS?: string
 }
 
 /** Delay between fake calls so e2e tests can watch a run progress. */

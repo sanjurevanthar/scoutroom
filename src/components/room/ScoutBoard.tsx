@@ -8,6 +8,7 @@ import { Badge, Button, EmptyState } from '@/components/ui'
 import { FOCUS_CARD_EVENT } from '@/lib/brief'
 import { roomsApi } from '@/lib/rooms-api'
 import type { RoomRecord, RoomRole } from '@/lib/room-types'
+import { DEFAULT_STALE_RUN_MS, isRunStale } from '@/lib/run-types'
 import type { CardRecord, RunRecord, RunStepRecord } from '@/lib/run-types'
 import { tally } from '@/lib/votes'
 import type { CardStatus, VoteRecord } from '@/lib/votes'
@@ -50,11 +51,19 @@ export function ScoutBoard({ roomId, room, role }: ScoutBoardProps) {
   }, [highlightId])
 
   const [starting, setStarting] = useState(false)
+  const [now, setNow] = useState(() => Date.now())
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 15_000)
+    return () => clearInterval(t)
+  }, [])
   const [stopping, setStopping] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
 
   const canRun = role === 'owner' || role === 'researcher'
-  const active = latest?.data.status === 'queued' || latest?.data.status === 'running'
+  const running = latest?.data.status === 'queued' || latest?.data.status === 'running'
+  // A run with no progress for a few minutes is dead; startRun (the server) is the judge and will reap it.
+  const stuck = !!latest && isRunStale(latest.data, now, DEFAULT_STALE_RUN_MS)
+  const active = running && !stuck
   const used = room.runsUsed ?? 0
   const limit = room.runLimit ?? 0
   const limitReached = used >= limit
@@ -104,6 +113,11 @@ export function ScoutBoard({ roomId, room, role }: ScoutBoardProps) {
         ) : (
           <p className="text-sm text-muted-foreground" data-testid="viewer-note">
             Viewers can watch runs but not start them.
+          </p>
+        )}
+        {canRun && stuck && (
+          <p className="w-full text-sm text-destructive" role="status" data-testid="run-stuck">
+            This run seems stuck. Click Run scout to start a new one.
           </p>
         )}
         {canRun && active && (

@@ -84,13 +84,15 @@ export async function runTick(state: RunState, deps: PipelineDeps): Promise<RunS
     await store.releaseLock(state.teamId, state.runId)
     return null
   }
-  if (run.status === 'queued') await store.updateRun(state.runId, { status: 'running' })
+  // Heartbeat: a step starting (and ending, below) tells startRun this run is alive.
+  if (run.status === 'queued') await store.updateRun(state.runId, { status: 'running', lastProgressAt: Date.now() })
+  else await store.updateRun(state.runId, { lastProgressAt: Date.now() })
 
   let toolCalls = Math.max(state.toolCalls, run.toolCallsUsed)
   const spend = async () => {
     if (toolCalls >= MAX_TOOL_CALLS) throw new BudgetExceededError()
     toolCalls += 1
-    await store.updateRun(state.runId, { toolCallsUsed: toolCalls })
+    await store.updateRun(state.runId, { toolCallsUsed: toolCalls, lastProgressAt: Date.now() })
   }
 
   const seq = STEP_ORDER.indexOf(state.step) + 1
@@ -163,9 +165,9 @@ export async function runTick(state: RunState, deps: PipelineDeps): Promise<RunS
         }
         if (!parsed.ok) throw new RunFailure('The AI did not return cards we could verify. Try again.')
 
-        // Stop clicked while the model was thinking: save nothing.
+        // Stopped (or reaped as stuck) while the model was thinking: save nothing.
         const latest = await store.getRun(state.runId)
-        if (!latest || latest.status === 'stopped') {
+        if (!latest || isTerminal(latest.status)) {
           await store.finishStep(stepId, 'done', 'Stopped before saving')
           await store.releaseLock(state.teamId, state.runId)
           return null
@@ -183,6 +185,7 @@ export async function runTick(state: RunState, deps: PipelineDeps): Promise<RunS
   }
 
   await store.finishStep(stepId, 'done', detail)
+  await store.updateRun(state.runId, { lastProgressAt: Date.now() }).catch(() => {})
   return next
 }
 
@@ -195,7 +198,8 @@ function dedupe(hits: SearchHit[]): SearchHit[] {
 export async function failRun(state: Pick<RunState, 'runId' | 'teamId'>, error: unknown, store: RunStore): Promise<void> {
   try {
     const run = await store.getRun(state.runId)
-    if (run && run.status !== 'stopped') {
+    // Never overwrite a run that already ended (stopped, or reaped as stuck with its own message).
+    if (run && !isTerminal(run.status)) {
       await store.updateRun(state.runId, { status: 'failed', error: humanMessage(error) })
     }
   } finally {

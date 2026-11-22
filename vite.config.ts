@@ -35,7 +35,7 @@ export default defineConfig({
       // so dev, build and deploy keep the real providers from wrangler.toml.
       config: (config) =>
         testMode
-          ? { vars: { ...config.vars, LLM_PROVIDER: 'fake', SEARCH_PROVIDER: 'fake' } }
+          ? { vars: { ...config.vars, LLM_PROVIDER: 'fake', SEARCH_PROVIDER: 'fake', STALE_RUN_MS: '3000' } }
           : {},
     }),
     // The app id `define`, the preview-secret cleanup, and the client dedupe
