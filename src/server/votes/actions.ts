@@ -11,8 +11,10 @@ const str = (v: unknown) => (typeof v === 'string' ? v.trim() : '')
 /** params: { cardId, value: 'keep' | 'reject' | null }. null removes the caller's vote. */
 export const castVote: ActionHandler<Env> = async ({ userId, params, tools }) => {
   const cardId = str(params.cardId)
-  const value = params.value ?? null
   if (!cardId) return fail('cardId is required')
+  // `value` must be sent on purpose: a missing value must not silently delete someone's vote.
+  if (!('value' in params)) return fail('value is required (keep, reject or null)')
+  const value = params.value ?? null
   if (value !== null && !isVoteValue(value)) return fail('value must be keep, reject or null')
 
   // The room comes from the card, never from the caller: a client cannot vote into a room by claiming it.
