@@ -120,8 +120,9 @@ test('server refuses a viewer and a non-member; a person cannot vote twice', asy
   const invite = await callAction(a.page, 'createInviteLink', { roomId })
   expect((await callAction(b.page, 'joinByInvite', { token: invite.data.token })).success).toBe(true)
 
-  // Bad input is refused.
+  // Bad input is refused. A missing value is refused too: it must not delete a vote by accident.
   expect((await callAction(a.page, 'castVote', { cardId, value: 'maybe' })).success).toBe(false)
+  expect((await callAction(a.page, 'castVote', { cardId })).error).toBe('value is required (keep, reject or null)')
 
   // Viewer: refused by the server, and the UI shows counts but no buttons.
   expect((await callAction(a.page, 'changeRole', { roomId, userId: await userIdOf(b.page), role: 'viewer' })).success).toBe(true)
@@ -144,7 +145,20 @@ test('server refuses a viewer and a non-member; a person cannot vote twice', asy
     callAction(a.page, 'castVote', { cardId, value: 'reject' }),
   ])
   expect(both.every((r) => r.success)).toBe(true)
-  await a.page.waitForTimeout(1500)
-  const text = (await card.getByTestId('vote-counts').textContent()) ?? ''
-  expect(['👍 1 · 👎 0', '👍 0 · 👎 1']).toContain(text.trim())
+  // Whichever click won, exactly one vote counts. Wait for the screen to show it (no fixed sleep).
+  await expect(card.getByTestId('vote-counts')).toHaveText(/^👍 1 · 👎 0$|^👍 0 · 👎 1$/, { timeout: 15_000 })
+})
+
+test('a person removed from the room stops counting toward the status', async ({ users }) => {
+  const [a, b] = await users(2)
+  const roomId = await roomWithCards(a.page, b.page)
+  const cardId = await firstCardId(a.page)
+  const counts = a.page.locator(`[data-card-id="${cardId}"]`).getByTestId('vote-counts')
+
+  expect((await callAction(b.page, 'castVote', { cardId, value: 'keep' })).success).toBe(true)
+  await expect(counts).toHaveText('👍 1 · 👎 0', { timeout: 15_000 })
+
+  expect((await callAction(a.page, 'removeMember', { roomId, userId: await userIdOf(b.page) })).success).toBe(true)
+  await expect(counts).toHaveText('👍 0 · 👎 0', { timeout: 15_000 })
+  await expect(a.page.locator(`[data-card-id="${cardId}"]`).getByTestId('card-status')).toHaveText('Undecided')
 })
