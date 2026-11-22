@@ -1,7 +1,8 @@
-/** Room page shell: question, members with live presence, and an empty board (F2 fills it). */
+/** Room page: question, members with live presence, and the scout board (runs + evidence cards). */
 import { Link, useParams } from 'react-router-dom'
 import { useAuth, usePresenceRoom, useQuery, useUsers } from 'deepspace'
 import { EmptyState } from '@/components/ui'
+import { ScoutBoard } from '@/components/room/ScoutBoard'
 import { InviteButton } from '@/components/room/InviteButton'
 import { MemberList, type MemberRow } from '@/components/room/MemberList'
 import type { MemberRecord, RoomRecord } from '@/lib/room-types'
@@ -38,7 +39,8 @@ export default function RoomPage() {
     role: m.data.role,
     online: onlineIds.has(m.data.userId),
   }))
-  const isOwner = rows.some((r) => r.userId === userId && r.role === 'owner')
+  const myRole = rows.find((r) => r.userId === userId)?.role
+  const isOwner = myRole === 'owner'
 
   return (
     <div className="mx-auto max-w-5xl px-6 py-8">
@@ -52,9 +54,7 @@ export default function RoomPage() {
           <MemberList roomId={roomId} members={rows} myId={userId ?? ''} isOwner={isOwner} />
           {isOwner && <InviteButton roomId={roomId} />}
         </aside>
-        <section className="rounded-lg border border-dashed border-border">
-          <EmptyState title="Agent runs arrive in Feature 2" description="Evidence cards will appear here." />
-        </section>
+        <ScoutBoard roomId={roomId} room={current.data} role={myRole} />
       </div>
     </div>
   )

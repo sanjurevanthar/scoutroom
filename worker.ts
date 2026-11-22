@@ -14,7 +14,6 @@ import {
   JobRoom,
   PresenceRoom,
   RecordRoom,
-  resolveAppRole,
   workerErrorHandler,
   YjsRoom,
 } from 'deepspace/worker'
@@ -69,11 +68,9 @@ export class AppCronRoom extends CronRoom<Env> {
 export class AppJobRoom extends JobRoom<Env> {
   constructor(state: DurableObjectState, env: Env) {
     super(state, env, {
-      authorizeWrite: async (user) => {
-        if (user.userId.startsWith('anon-')) return false
-        const role = await resolveAppRole(env, user.userId)
-        return role === 'member' || role === 'admin'
-      },
+      // Nobody enqueues from the browser. Only the startRun action (server side)
+      // can enqueue a scout run: it checks the room role, limit and lock first.
+      authorizeWrite: async () => false,
     })
   }
 
@@ -118,6 +115,13 @@ export interface Env extends DOBindings<typeof __DO_MANIFEST__> {
    * an authenticated app owner/admin. deepspace dev/test set it locally.
    */
   ALLOW_DEBUG_ROUTES?: string
+  /** Non-secret provider switches (wrangler.toml [vars]): groq | deepspace | fake, free | deepspace | fake. */
+  LLM_PROVIDER?: string
+  SEARCH_PROVIDER?: string
+  GROQ_MODEL?: string
+  /** Secrets from `npx deepspace secrets`. Server only: never logged, never sent to a client. */
+  GROQ_API_KEY?: string
+  OPENALEX_API_KEY?: string
 }
 
 export type AppContext = { Bindings: Env }
