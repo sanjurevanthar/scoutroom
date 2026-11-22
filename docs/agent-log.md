@@ -103,7 +103,13 @@ How I directed the coding agent, session by session. Each entry follows this tem
   - Two-user e2e: A and B vote on one card; counts, status and highlight update live on both screens; B's changed vote replaces their earlier one and A sees it; undo; filter tab counts.
   - Server: viewer's `castVote` refused; non-member's refused; unknown card refused; bad value refused; the same vote twice and two simultaneous votes by one person still count once.
 - Known gap: some older Playwright tests are timing-sensitive and failed intermittently when the whole suite ran together with the new votes spec (API status page "Loading..." check, run-limit lock polling). Each failure was in a different test and the next run passed; two runs on `main` passed. Not fixed in this PR.
-- What I verified myself:
+- What I verified myself: Google sign-in doesn't work on localhost, so before
+  merging I relied on the automated tests (3 green full runs). After merging
+  PR #1 and deploying, I tested on scoutroom.app.space with two accounts in
+  two browsers. At first the vote buttons were missing: I had deployed before
+  the merge reached main. I merged, pulled main, deployed again, and the
+  Keep / Reject buttons and filter tabs appeared. When user one voted on a
+  card, the count updated live in the other browser without refreshing.
 - Tokens / cost (from /cost): TODO
 
 ---
@@ -144,5 +150,8 @@ How I directed the coding agent, session by session. Each entry follows this tem
   - Real-user part of R12/doc 11: a person in about 100 rooms still breaks live reads; there is no leave/delete room feature yet. Recorded as a risk, not built.
   - Old local dev data: `.wrangler/state` still has 103 and 83 test rooms for the two test accounts. If your own `npm run dev` hangs on "Connecting...", delete that folder (dev data only).
 - Test results (`npx deepspace test run all`, foreground): before the fixes 3 of 4 runs failed a different old test each time. After R1 to R4: run 1 green, run 2 red (R13, one old test), run 3 green. After R13: **3 of 3 green** (62 unit + 21 Playwright each time). Only 3 runs prove it, so watch for a repeat.
-- What I verified myself:
+- What I verified myself: I read the review and the fix reply on PR #1. Each
+  finding was marked fixed (with a commit) or not fixed (with a reason). I
+  merged only after the 3 green test runs, then checked the voting behaviour
+  live with two accounts (see Session 05).
 - Tokens / cost (from /cost): TODO
