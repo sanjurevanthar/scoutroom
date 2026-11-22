@@ -84,14 +84,54 @@
 | R3 | Job path fails the spike (T4, T6) | medium | Plan B: one action, fixed pipeline. |
 | R4 | Groq model does not return clean JSON (T14) | medium | zod validation; repair call (Plan A); stricter prompt; fall back to a different model id. |
 | R5 | Free sources give weak or irrelevant results | high | Show results transparently in steps; humans vote; switch to Exa + Scholar when credits exist. |
-| R6 | Free API rate limits or downtime (OpenAlex, Wikipedia) | medium | Retry once, skip the failed query, keep going; demo from the seeded room. |
+| R6 | Free API rate limits or downtime (OpenAlex: shared $0.10/day per IP without a key, about 100 requests; Wikipedia) | high | Retry once, skip the failed query, keep going; demo from the seeded room. |
 | R7 | Groq key leaks, or free-tier rate limits (429) stall runs | low | Secrets store only; 429 retry/backoff and "rate limited, try again" status; redaction + pre-commit scan; rotate key. |
 | R8 | Deadline (Sunday night) | high | Cut F4 first. Then simplify invites to one researcher link. Demo from a seeded room. |
 | R9 | AI returns weak or empty cards | medium | Repair call (Plan A); show "no usable cards" with the steps. |
 | R10 | Prompt injection works partly | medium | Humans vote; LLM has no tools; URL allowlist (see 09). |
 | R11 | Lock stays stuck after a crash | low | `expiresAt` rescue in `startRun`. |
 
-## TO VERIFY (facts I could not confirm from the docs or repo)
+## Spike results (session 02, branch `spike/verify`, local `deepspace test run`)
+
+**Decision: GO (job design, Plan A).** Every "must" test passed: a job handler can call OpenAlex, Wikipedia and Groq, write records, and be enqueued only by a server action while all client enqueues are denied. The lock and role gate also work. Remaining unknowns (T1, T11) do not block Plan A because the job path avoids the action time limit.
+
+Groq model chosen: **`openai/gpt-oss-20b`** (from `GET /models`: small and fast, 131k context, free tier, JSON mode worked). Alternatives listed: `openai/gpt-oss-120b`, `qwen/qwen3.8-27b`. Groq calls used: 3 of ~5.
+
+| ID | Status | Evidence |
+|---|---|---|
+| T13 outbound fetch | **CONFIRMED** | A server action (`spikeProbe`) got HTTP 200 from OpenAlex (3 results) and Wikipedia (3 results); `GROQ_API_KEY` was present on the server (never printed). `GET api.groq.com/openai/v1/models` returned 200 with 11 models. Groq pricing is not needed (free tier, rate limits only). |
+| T16 same as T13 | **CONFIRMED** | Same evidence; also from inside the job handler. |
+| T6 job handler | **CONFIRMED** | Job `spike-run` called OpenAlex + Wikipedia + Groq and wrote 1 `spike_cards` record (title "CTFusion: A CTF-based Benchmark for LLM Agent Evaluation", url `https://doi.org/10.48550/arxiv.2605.11504`), then released the lock. Handler writes records through the same action tools (`createActionTools`, exported from `action-routes.ts`). |
+| T4 enqueue with client writes denied | **CONFIRMED** | `AppJobRoom` set to `authorizeWrite: async () => false`. Client `useJobs().enqueue` failed with `JobRoom write access denied`; server action `enqueueJob(env.JOB_ROOMS, 'app:<id>', ...)` still succeeded and the job ran. |
+| T3 `uniqueOn` lock | **CONFIRMED** | Two parallel `spikeStart` calls: one `success: true`, the other `run already active (Duplicate: a record with teamId=... already exists in spike_locks)`. Lock released by the job; 0 locks left. |
+| T2 role gate (server refuses viewer) | **CONFIRMED** (the action-level part) | A `viewer` in `spike_members` calling `spikeStart` got `forbidden: role=viewer`; an `owner` got through. NOT tested: `read: 'team'` rules (that was the original T2 wording; see "Still open" below). |
+| T5 job queue scope | **CONFIRMED: per scope id, one job at a time per scope** | Two 6 s jobs in the same scope (`app:<id>`) ran one after the other (started 714093 and 720113 ms). Two jobs in two different scope ids ran at the same time (both started at 714118 ms). The docs agree ("Jobs still run one at a time"). The demo can use the single app scope (per your answer) or one scope per ScoutRoom later. |
+| T7 `createdBy` | **CONFIRMED** | It is whatever user id the tools were created with. Action: the caller's id (`spikeSetup` record `createdBy` = caller). Job: the id we passed (the enqueuer's id in the payload; `createdBy` = that user). A job has no built-in identity, so we must pass one (for example the run owner or a fixed `agent` id). |
+| T12 two test accounts | **CONFIRMED** | `npx deepspace test accounts create --email <name>@deepspace.test --name "<n>" --password-stdin --label spike`; the `users(2)` Playwright fixture signs both in. Passwords are saved locally, never printed. In a page, `getAuthToken()` gives the Bearer token for `/api/actions/:name`. |
+| JSON mode | **CONFIRMED (1 run)** | `response_format: {type: 'json_object'}` on `openai/gpt-oss-20b` returned valid JSON with a `cards` array; `JSON.parse` OK; the card URL was one of the URLs we gave it (allowlist check passed). Usage: 408 prompt + 354 completion tokens in 0.4 s. One sample is not proof of reliability: keep zod validation and the repair call. No 429 seen in 3 calls. |
+| T15 OpenAlex / Wikipedia fields | **CONFIRMED** | OpenAlex `/works` (with `select=`): `id, doi, title, publication_year, cited_by_count, primary_location{landing_page_url, pdf_url, is_oa, source{display_name}}`. Wikipedia `rest.php/v1/search/page`: `id, key, title, excerpt (HTML with searchmatch spans), description, thumbnail`; page URL = `https://en.wikipedia.org/wiki/<key>`. Groq response: `id, object, created, model, choices[0].message.content, choices[0].finish_reason, usage{prompt_tokens, completion_tokens, total_tokens, completion_tokens_details.reasoning_tokens}, x_groq, service_tier`. |
+| T14 JSON mode on the chosen model | **CONFIRMED** | See JSON mode row. |
+| T1 server-action time limit | **STILL UNKNOWN** | Not tested (local dev does not show production limits). The docs give no number for an action; they say `waitUntil` work is killed 30 s after the response, and a job alarm has a 15-minute wall time. So long work must go in the job, not an action. This is why Plan A is preferred. |
+| T11 `ctx.continue` size and behavior | **STILL UNKNOWN** | The docs describe it (`resumeFrom` holds the last checkpoint; retries re-run the handler) but give no size limit. Not needed: one pass of plan, search and cards fits well inside 15 minutes. |
+| T8 per-room presence API | **STILL UNKNOWN** | Not part of this spike. |
+| T9 DeepSpace integration fields | **STILL UNKNOWN** (not tested: no DeepSpace credits) | Deliberately no `anthropic`, `exa` or `scholar` calls. |
+| T2 original: `read: 'team'` with `team_members` | **STILL UNKNOWN** | Spike used `read: true` and a role column checked in the action. The team-read rule was not tested. |
+
+### New findings that change the plan
+- **OpenAlex now rations by cost, not by polite email.** The response `meta.notice` says: no API key means a shared **$0.10 per day budget per IP address**; each request cost $0.001 (about 100 requests per day, 1000 "credits"); headers `x-ratelimit-remaining`, `x-ratelimit-reset` are returned. A free API key (own $1/day) is available at openalex.org/settings/api. So `OPENALEX_MAILTO` was **not set** in the secrets store (only `GROQ_API_KEY`), and the spike sent no mailto. Action for you: decide if you want an OpenAlex API key (it is emailed to the address you give; I did not register one); if yes, store it as `OPENALEX_API_KEY` via `npx deepspace secrets`. Until then, limit to 1 to 2 OpenAlex queries per run (risk R6).
+- **Wikipedia needs a `User-Agent`**; we send `ScoutRoomSpike/0.1`. Excerpts contain HTML tags; strip them.
+- Circular import trap: a file imported by `src/actions/index.ts` must not import `action-routes.ts` at load time (the actions map came out empty and every action returned 404). The spike used a lazy `import()`.
+
+### Provider interfaces (sketch, on `spike/verify`: `src/providers.ts`)
+```ts
+interface SearchHit { title; url; snippet; sourceName; year? }
+interface SearchProvider { search(query, limit?): Promise<SearchHit[]> }
+interface LLMProvider { complete(messages, jsonSchema?): Promise<{ text; usage? }> }
+// Now:   GroqProvider, OpenAlexSearch, WikipediaSearch
+// Later: DeepSpaceAnthropicProvider, ExaSearch, ScholarSearch  (not tested: no DeepSpace credits)
+```
+
+## TO VERIFY (original list; results are in the spike table above)
 
 | ID | What | Why it matters | How to check |
 |---|---|---|---|
