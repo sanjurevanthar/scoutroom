@@ -52,3 +52,6 @@ export function parseJson<T>(text: string | undefined, fallback: T): T {
     return fallback
   }
 }
+
+/** The brief panel fires this on `window` (detail: card id); the board scrolls to and highlights that card. */
+export const FOCUS_CARD_EVENT = 'scoutroom:focus-card'

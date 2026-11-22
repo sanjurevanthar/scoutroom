@@ -2,9 +2,10 @@
  * The board: run button + usage, live step timeline, and the card grid.
  * Everything comes from live queries, so every member watches a run as it happens.
  */
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useAuth, useQuery } from 'deepspace'
 import { Badge, Button, EmptyState } from '@/components/ui'
+import { FOCUS_CARD_EVENT } from '@/lib/brief'
 import { roomsApi } from '@/lib/rooms-api'
 import type { RoomRecord, RoomRole } from '@/lib/room-types'
 import type { CardRecord, RunRecord, RunStepRecord } from '@/lib/run-types'
@@ -30,6 +31,23 @@ export function ScoutBoard({ roomId, room, role }: ScoutBoardProps) {
   const votes = useQuery<VoteRecord>('votes', { where: { teamId: roomId } })
   const { userId } = useAuth()
   const [filter, setFilter] = useState<Filter>('all')
+
+  // A [n] in the brief asks us to show one card: clear the filter, scroll to it, highlight it for a while.
+  const [highlightId, setHighlightId] = useState<string | null>(null)
+  useEffect(() => {
+    const onFocus = (e: Event) => {
+      setFilter('all')
+      setHighlightId((e as CustomEvent<string>).detail)
+    }
+    window.addEventListener(FOCUS_CARD_EVENT, onFocus)
+    return () => window.removeEventListener(FOCUS_CARD_EVENT, onFocus)
+  }, [])
+  useEffect(() => {
+    if (!highlightId) return
+    document.querySelector(`[data-card-id="${CSS.escape(highlightId)}"][data-testid="card"]`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    const t = setTimeout(() => setHighlightId(null), 6000)
+    return () => clearTimeout(t)
+  }, [highlightId])
 
   const [starting, setStarting] = useState(false)
   const [stopping, setStopping] = useState(false)
@@ -185,7 +203,13 @@ export function ScoutBoard({ roomId, room, role }: ScoutBoardProps) {
       {visible.length > 0 && (
         <ul className="grid gap-3 sm:grid-cols-2" data-testid="card-grid">
           {visible.map(({ card: c, tally: t }) => (
-            <li key={c.recordId} className="flex flex-col gap-2 rounded-lg border border-border bg-card p-4" data-testid="card" data-card-id={c.recordId}>
+            <li
+              key={c.recordId}
+              className={`flex flex-col gap-2 rounded-lg border bg-card p-4 ${highlightId === c.recordId ? 'border-primary ring-2 ring-primary' : 'border-border'}`}
+              data-testid="card"
+              data-card-id={c.recordId}
+              data-highlighted={highlightId === c.recordId ? 'true' : 'false'}
+            >
               <p className="text-sm" data-testid="card-claim">{c.data.claim}</p>
               <a
                 href={c.data.sourceUrl}
