@@ -140,7 +140,7 @@ Votes are **not** stored on the card. The keep/reject counts and the Kept / Reje
 | userId | text | the voter |
 | value | select | `keep` / `reject` |
 
-`uniqueOn: ['cardId','userId']`: one vote per person per card. Changing a vote replaces that row; removing a vote deletes it. Reads: room members. Client writes: denied; only the `castVote` server action writes (owner and researcher only).
+`uniqueOn: ['cardId','userId']`: one vote per person per card. Changing a vote replaces that row; removing a vote deletes it. Reads: room members. Client writes: denied; only the `castVote` server action writes (owner and researcher only). `removeMember` deletes the removed person's votes in that room (D12).
 
 ### `briefs` [THIS BUILD, stretch]
 | Field | Type | Notes |
