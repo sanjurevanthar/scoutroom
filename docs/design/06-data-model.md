@@ -9,7 +9,7 @@ erDiagram
   ROOM ||--o{ MEMBER : has
   ROOM ||--o{ RUN : has
   ROOM ||--o{ CARD : has
-  ROOM ||--o| BRIEF : has
+  ROOM ||--o{ BRIEF : has
   RUN  ||--o{ RUNSTEP : has
   RUN  ||--o{ CARD : produced
   CARD ||--o{ VOTE : receives
@@ -56,8 +56,10 @@ erDiagram
   }
   BRIEF {
     string teamId FK
-    string text
-    json citations
+    int seq
+    json content
+    json citedCardIds
+    json keptCardIds
   }
 ```
 
@@ -142,13 +144,20 @@ Votes are **not** stored on the card. The keep/reject counts and the Kept / Reje
 
 `uniqueOn: ['cardId','userId']`: one vote per person per card. Changing a vote replaces that row; removing a vote deletes it. Reads: room members. Client writes: denied; only the `castVote` server action writes (owner and researcher only). `removeMember` deletes the removed person's votes in that room (D12).
 
-### `briefs` [THIS BUILD, stretch]
+### `briefs` [THIS BUILD]
+We **keep history** (every brief written, max 5 per room) and the page shows the latest. Why: the limit then counts saved rows, and a bad regenerate never destroys a good brief.
+
 | Field | Type | Notes |
 |---|---|---|
-| teamId | text | one brief per room (`uniqueOn: ['teamId']`) |
-| text | text | uses `[n]` markers |
-| citations | json | `[{ n: 1, cardId }]`, only kept cards |
-| generatedBy | text | user id |
+| teamId | text | room id |
+| seq | number | 1, 2, 3... per room. `uniqueOn: ['teamId','seq']`: two briefs written at the same moment cannot take the same slot, so the limit of 5 cannot be passed |
+| content | text | JSON `[{ text, citations: [cardId] }]`, already validated. `text` has no `[n]` markers; the page adds them |
+| citedCardIds | text | JSON array of card ids in order of first appearance. Marker `[n]` = position `n` in this list |
+| keptCardIds | text | JSON array (sorted) of the kept card ids **at generation time**. The page compares it with the kept set now to show "Stale" |
+| createdBy | text | user id |
+| model | text | `<provider>/<model>`, e.g. `groq/openai/gpt-oss-20b` |
+
+Reads: room members. Client writes: denied; only the `generateBrief` action writes (owner and researcher only).
 
 ### `run_locks` (the one-run-per-room lock)
 **Why it exists:** two people clicking Run at the same moment must not start two runs (double cost, tangled steps). `uniqueOn: ['teamId']` means DeepSpace refuses a second lock for the same room, so exactly one click wins. The lock is released when the run ends or is stopped.

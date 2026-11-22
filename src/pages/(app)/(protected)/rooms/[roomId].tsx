@@ -2,6 +2,7 @@
 import { Link, useParams } from 'react-router-dom'
 import { useAuth, usePresenceRoom, useQuery, useUsers } from 'deepspace'
 import { EmptyState } from '@/components/ui'
+import { BriefPanel } from '@/components/room/BriefPanel'
 import { ScoutBoard } from '@/components/room/ScoutBoard'
 import { InviteButton } from '@/components/room/InviteButton'
 import { MemberList, type MemberRow } from '@/components/room/MemberList'
@@ -54,7 +55,10 @@ export default function RoomPage() {
           <MemberList roomId={roomId} members={rows} myId={userId ?? ''} isOwner={isOwner} />
           {isOwner && <InviteButton roomId={roomId} />}
         </aside>
-        <ScoutBoard roomId={roomId} room={current.data} role={myRole} />
+        <div className="space-y-6">
+          <BriefPanel roomId={roomId} role={myRole} />
+          <ScoutBoard roomId={roomId} room={current.data} role={myRole} />
+        </div>
       </div>
     </div>
   )

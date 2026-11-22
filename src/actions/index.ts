@@ -4,6 +4,7 @@ import type { Env } from '../../worker'
 // that creates an import cycle and the actions map comes out empty (404s).
 import { roomActions } from '../server/rooms/rooms'
 import { runActions } from '../server/runs/actions'
+import { briefActions } from '../server/briefs/actions'
 import { voteActions } from '../server/votes/actions'
 
-export const actions: Record<string, ActionHandler<Env>> = { ...roomActions, ...runActions, ...voteActions }
+export const actions: Record<string, ActionHandler<Env>> = { ...roomActions, ...runActions, ...voteActions, ...briefActions }

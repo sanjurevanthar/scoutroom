@@ -19,6 +19,8 @@ export interface LLMResult {
 
 export interface LLMProvider {
   readonly name: string
+  /** Model id, saved with a brief so you can tell which model wrote it. */
+  readonly model?: string
   complete(messages: ChatMessage[], schema?: JsonSchemaSpec, signal?: AbortSignal): Promise<LLMResult>
 }
 

@@ -61,10 +61,10 @@ flowchart LR
 - **Steps:** click Keep or Reject on a card -> counts update live for everyone. Clicking again changes your vote.
 - **What can go wrong:** viewer tries (refused). Double click (still one vote per person per card).
 
-### UC6 · Cited brief (F4, stretch)
+### UC6 · Cited brief (F4)
 - **Actor:** Owner or Researcher. The AI Agent writes it.
 - **Steps:** click "Write brief" -> agent uses **only kept cards** -> brief appears with [1] [2] links to cards.
-- **What can go wrong:** no kept cards (button disabled). The brief cites a number that is not a kept card (validation rejects it).
+- **What can go wrong:** no kept cards (button disabled, server refuses with "Keep at least one card first"); 5 briefs already written (limit). The brief cites a number that is not a kept card (validation rejects it).
 
 ### UC7 · Watch and read (F1/F2)
 - **Actor:** everyone in the room, including Viewer.

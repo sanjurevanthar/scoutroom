@@ -4,7 +4,7 @@ import { FakeLLM, FakeSearch } from './fake'
 import { GroqProvider } from './groq'
 import { OpenAlexSearch } from './openalex'
 import { ProviderConfigError } from './types'
-import type { Providers } from './types'
+import type { LLMProvider, Providers } from './types'
 import { WikipediaSearch } from './wikipedia'
 
 export interface ProviderEnv {
@@ -18,10 +18,9 @@ export interface ProviderEnv {
 /** Delay between fake calls so e2e tests can watch a run progress. */
 const FAKE_DELAY_MS = 1200
 
-export function getProviders(env: ProviderEnv): Providers {
+/** Just the LLM (the brief needs no search). Throws ProviderConfigError if it is not configured. */
+export function getLlm(env: ProviderEnv): LLMProvider {
   const llmSetting = env.LLM_PROVIDER || 'groq'
-  const searchSetting = env.SEARCH_PROVIDER || 'free'
-
   const llm =
     llmSetting === 'groq'
       ? new GroqProvider({ apiKey: env.GROQ_API_KEY, model: env.GROQ_MODEL })
@@ -31,6 +30,12 @@ export function getProviders(env: ProviderEnv): Providers {
           ? new FakeLLM(undefined, FAKE_DELAY_MS)
           : null
   if (!llm) throw new ProviderConfigError(`Unknown LLM_PROVIDER "${llmSetting}"`)
+  return llm
+}
+
+export function getProviders(env: ProviderEnv): Providers {
+  const llm = getLlm(env)
+  const searchSetting = env.SEARCH_PROVIDER || 'free'
 
   if (searchSetting === 'free') {
     return {
