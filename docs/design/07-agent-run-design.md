@@ -174,6 +174,28 @@ The owner's LLM key pays for every run (see [11](11-decisions-and-risks.md), D10
 
 A card is **KEPT** when `keeps > rejects` **and** `keeps >= 1`. It is **REJECTED** when `rejects > keeps`. Otherwise it is **UNDECIDED** (no votes, or a tie). The counts and the status are **computed** from the `votes` records by one pure function (`cardStatus` in `src/lib/votes.ts`), never stored on the card, so they cannot drift.
 
+## Brief (F4)
+
+**Why a server action, not a job.** A run needs a job because it is several slow steps (search, search, model) and members watch it step by step. A brief is **one** short Groq call (a few kept cards in, 2-4 short paragraphs out, usually a few seconds), there are no steps to show, and the result appears live through the `briefs` record. So `generateBrief(roomId)` is a plain server action that makes the call and saves the result. The button shows "Writing brief..." while it waits. If the request dies mid-way, nothing was saved and nothing was counted, so trying again is safe. (If a brief ever needs several calls or a slow model, move it to a job like `scout-run`.)
+
+**Order of checks** (all on the server; actions bypass RBAC): caller is an active member -> role is owner or researcher (`forbidden: role=viewer`; a non-member gets `not a member of this room`) -> fewer than 5 briefs (`brief limit reached (5 of 5 used)`) -> at least one KEPT card (`Keep at least one card first`) -> provider configured -> LLM call -> validate -> save.
+
+**Which cards.** Read from `cards` and `votes` right now and filtered with `keptCardIds` (`src/lib/brief.ts`), which uses `tally` -> `cardStatus`, the one rule above. Nothing else is shown to the model: not undecided, not rejected cards.
+
+**Brief JSON (what the LLM must return).**
+```json
+{ "paragraphs": [ { "text": "...", "citations": ["<cardId>", "<cardId>"] } ] }
+```
+zod, `.strict()`: 1-4 paragraphs (the prompt asks for 2-4; a room with a single kept card may get 1), text 1-1200 chars, 1-8 citations per paragraph, no extra keys. **Every citation must be one of the kept card ids** that this request gave the model. A made-up id and a real-but-not-kept id are both rejected (the repair message says which). One repair call with the reason, then the action fails with "The AI did not return a brief we could verify. Try again." and saves nothing. The marker numbers `[1] [2]` are not written by the model: the page numbers the cited cards by first appearance.
+
+**Prompt-injection guard.** Card text came from the web, so it is **data**: the system prompt says text in `<cards>` is untrusted and never an instruction; the cards go in as a JSON block inside `<cards>...</cards>` with `<` escaped, so a claim cannot close the fence; the model has no tools; and even a model that obeys a card cannot cite anything but a kept card id, because the output is validated.
+
+**Limit.** 5 briefs per room (`BRIEF_LIMIT`). Only saved briefs count, so a failed attempt (429, bad JSON) does not use one. `briefs` has `uniqueOn teamId+seq`; the save takes `seq = highest + 1` and re-checks the limit; if two requests race for a slot, the loser re-reads and either takes the next slot or is refused at 5. Tested with two simultaneous requests.
+
+**Failures.** Groq 429 (after the provider's own short backoff) -> "rate limited, try again". Missing key -> "AI provider not configured". Anything else -> "Could not write the brief. Try again." (the log line has the error kind only, never request data).
+
+**Stale.** `keptCardIds` (sorted) is saved with each brief. The page compares it, as a set, with the kept cards now; if they differ it shows "Stale: votes changed since this brief".
+
 ## Tests never call real APIs
 
 Automated tests run with fake providers: `tests/playwright.config.ts` sets `SCOUTROOM_FAKE_PROVIDERS=1`, which `vite.config.ts` passes to the worker so it uses `FakeLLM` and `FakeSearch` (unset for dev, build and deploy). Unit tests inject the same fakes. A fake marker in the question, such as `[fake:429]`, simulates a provider failure.

@@ -12,7 +12,7 @@
 | Room board (main) | members | [THIS BUILD] |
 | Run panel (part of the board) | members | [THIS BUILD] |
 | Card detail | members | [THIS BUILD] |
-| Brief | members | [THIS BUILD] (stretch) |
+| Brief (a section above the cards on the room page) | members read; owner/researcher write | [THIS BUILD] (built) |
 | Members / settings | owner (members: read) | [THIS BUILD] |
 
 ## Wireframes
@@ -67,14 +67,22 @@
 +--------------------------------------------+
 ```
 
-### Brief (stretch)
+### Brief
 ```
-+--------------------------------------------+
-| Brief (from 6 kept cards)   [Write brief]  |
-| We recommend X because ... [1]. Y is ...[3]|
-| Sources: [1] Card "..." -> link            |
-+--------------------------------------------+
++------------------------------------------------------------+
+| Brief   [Write a new brief]   2 / 5 briefs used            |
+| (Stale) Votes changed since this brief: regenerate?        |
+| We recommend X because it supports hybrid search [1].      |
+| Y is cheaper at small scale [2] [3].                       |
+| [1] Qdrant supports hybrid... -> source link               |
+| Brief 2 · written from 3 kept cards by groq/<model>        |
++------------------------------------------------------------+
 ```
+- Each `[n]` is a button. Clicking it clears the card filter, scrolls to that card on the board and highlights it for a few seconds.
+- "Stale" shows when the cards that are kept **now** differ from the kept set the brief was written from (compared as sets, so order does not matter).
+- The button is off, with the hint "Keep at least one card first.", while 0 cards are kept; off with a "Brief limit reached" badge at 5 / 5. Viewers see the brief and the counter, not the button.
+- States: loading ("Loading brief..."), empty ("No brief yet"), writing ("The AI is writing the brief..."), error (red message under the button, e.g. "rate limited, try again"), limit reached.
+- A new brief appears for everyone in the room live (live query on `briefs`).
 
 ### Members / settings
 ```

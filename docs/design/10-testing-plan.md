@@ -50,7 +50,7 @@ For T-8 to T-11, the provider calls are replaced by a fake (a fast stub) so test
 - [ ] Click Run twice quickly: only one run starts.
 - [ ] Refresh mid-run: status and steps are still there.
 - [ ] Reach the run limit: button disabled with a clear message.
-- [ ] (If built) Write brief: every `[n]` links to a kept card.
+- [ ] Write brief: every `[n]` links to a kept card; clicking it highlights the card; "Stale" shows after a vote changes.
 - [ ] `npx deepspace logs` shows no errors; `npx deepspace app usage` shows spend is small.
 - [ ] **Seeded demo room (Sunday):** a room with a real question, a finished run, ~8 cards and a few votes, created before the demo as a backup if search, the AI provider or the network is slow.
 - [ ] `GROQ_API_KEY` and `OPENALEX_MAILTO` are in the secrets store (not in git); Groq free-tier rate limits are known (no spending limit needed).
@@ -58,3 +58,9 @@ For T-8 to T-11, the provider calls are replaced by a fake (a fast stub) so test
 ## Test isolation
 
 The e2e test server uses fresh, throwaway storage on every run (`vite.config.ts`, only when `SCOUTROOM_FAKE_PROVIDERS=1`). The two test accounts keep every room they create, and past about 100 rooms the SDK's team-read query fails (R12 in [11](11-decisions-and-risks.md)), which made random tests fail. Never point tests at `.wrangler/state`.
+
+## F4 brief tests (session 07)
+
+- Unit `src/server/briefs/parse.test.ts`: unknown citation id rejected, real-but-not-kept id rejected, bad JSON, wrong shape, extra keys, 0 or 5 paragraphs, empty citations; `keptCardIds` uses the one kept rule.
+- Unit `src/server/briefs/actions.test.ts` (fake tools + FakeLLM): only kept cards reach the prompt; 0 kept refused without an LLM call; viewer and non-member refused; limit holds (also for two at once); one repair then fail cleanly; 429 message; card text cannot close the data fence.
+- e2e `tests/brief.spec.ts` (two users, fake providers): A keeps a card and writes a brief, B sees it live, clicking `[1]` highlights the card, Stale appears live and clears on regenerate; server refusals and the 5-brief limit; a viewer reads but cannot write.

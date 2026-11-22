@@ -25,7 +25,7 @@
 | Q6 | One question per room; re-runs allowed within the limit. | [06](06-data-model.md), [07](07-agent-run-design.md) |
 | Q7 | Kept = keeps > rejects AND keeps >= 1. | [07](07-agent-run-design.md), [06](06-data-model.md) |
 | Q8 | Owner and researchers can stop a run. | [03](03-roles-and-permissions.md) |
-| Q9 | Yes, cut F4 (brief) first if time runs short. | [01](01-product-overview.md) |
+| Q9 | Yes, cut F4 (brief) first if time runs short. (Time allowed: F4 was built in session 07.) | [01](01-product-overview.md) |
 | Q10 | Yes, seed a demo room on Sunday. | [10](10-testing-plan.md) |
 
 ## Decisions (short ADRs)
@@ -79,6 +79,11 @@
 - **Decision:** `removeMember` deletes that person's votes in the room. `castVote` refuses a request with no `value` (only an explicit `null` removes a vote).
 - **Why:** a person who left must not keep deciding Kept / Rejected; and a forgotten field must not delete a vote by accident.
 - **Not changed:** a person who is only made a viewer keeps their earlier vote (they cannot change it, but it still counts).
+
+### D13 · The brief is one server action; history kept, max 5 per room
+- **Decision:** `generateBrief` is a server action (one short Groq call), not a job. Briefs are kept as history (`briefs`, `uniqueOn teamId+seq`), the page shows the latest, and 5 per room is the cap. Citations are ids of kept cards, validated by zod; one repair, then a clean failure.
+- **Why:** no steps to watch, so a job adds nothing; history means a bad regenerate cannot destroy a good brief and the limit is a simple count; `seq` makes the limit race-proof (see [07](07-agent-run-design.md#brief-f4)).
+- **Tradeoff:** a slow model could hit the action time limit (T1 in 07, not measured for this call); history uses up to 5 rows per room. The 5 limit also counts briefs nobody reads.
 
 ### D11 · Process: who merges
 - **Note:** F2 was auto-merged by the agent before the PR process was in place; from F3 on, PRs are reviewed and merged by me.

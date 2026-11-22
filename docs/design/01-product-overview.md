@@ -29,7 +29,7 @@ Small teams (2-10 people) making a tech or product choice, who want AI speed but
 | F1 | Rooms, roles (owner / researcher / viewer), invites | **[THIS BUILD]** |
 | F2 | Live agent run: search, then cards, visible step by step | **[THIS BUILD]** |
 | F3 | Team votes (keep / reject) with live counts | **[THIS BUILD]** |
-| F4 | Cited brief from kept cards (stretch: **cut first** if time is short, decided) | **[THIS BUILD]** (stretch) |
+| F4 | Cited brief from kept cards (owner/researcher writes it; max 5 per room; every `[n]` is a kept card) | **[THIS BUILD]** (built, session 07) |
 | F5 | Challenge a card (agent digs deeper on one card) | **[FUTURE]** |
 | F6 | Watch mode: daily re-check + email digest | **[FUTURE]** |
 | F7 | Agent tools via `registerAgent` (my own coding agent queries a room) | **[FUTURE]** |
@@ -53,7 +53,7 @@ Small teams (2-10 people) making a tech or product choice, who want AI speed but
 2. A viewer cannot run the agent. The **server** refuses it, not just the UI.
 3. A second run cannot start while one is active. Reaching the budget stops the run cleanly.
 4. A page refresh in the middle of a run shows the correct status and all steps so far.
-5. Every card has a working source link and passed validation. (If F4 ships: every `[n]` in the brief maps to a kept card.)
+5. Every card has a working source link and passed validation. Every `[n]` in the brief maps to a kept card (F4 shipped; the server rejects any other citation).
 
 ## AI and search providers (decided)
 

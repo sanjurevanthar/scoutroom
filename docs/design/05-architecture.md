@@ -86,7 +86,7 @@ src/
   schemas/            rooms, team_members, invites, runs, run_steps, cards, votes, briefs, run_locks
   schemas.ts          add the new schemas to the list
   actions/index.ts    createRoom, createInvite, joinRoom, setRole, removeMember,
-                      setBudget, startRun, stopRun, castVote, writeBrief
+                      setBudget, startRun, stopRun, castVote, generateBrief
   jobs.ts             runJob: 'scout-run' (plan -> search -> cards)
   agent/              plan.ts, search.ts, cards.ts, validate.ts (zod), prompts.ts  (server only)
     providers/        types.ts (the two interfaces), index.ts (getProviders from env settings),
