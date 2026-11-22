@@ -118,6 +118,8 @@ export interface Env extends DOBindings<typeof __DO_MANIFEST__> {
   /** Non-secret provider switches (wrangler.toml [vars]): groq | deepspace | fake, free | deepspace | fake. */
   LLM_PROVIDER?: string
   SEARCH_PROVIDER?: string
+  /** Non-secret: ms without progress before a run counts as stuck (default 180000, docs/design/07). */
+  STALE_RUN_MS?: string
   GROQ_MODEL?: string
   /** Secrets from `npx deepspace secrets`. Server only: never logged, never sent to a client. */
   GROQ_API_KEY?: string

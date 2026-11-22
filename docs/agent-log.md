@@ -196,5 +196,31 @@ How I directed the coding agent, session by session. Each entry follows this tem
   - Issue 3: no transaction method exists in `ActionTools`; none found in the docs.
   - Issue 5: no retry for thrown errors is accurate, but the retry-safe code also protects the platform's crash-recovery retry, so it is not dead.
 - Test results: not run (docs only, no code changed).
-- What I verified myself:
+- What I verified myself: I reviewed docs/design/13-reliability.md and checked
+  that the 6 issues, options and statuses match my review, then merged it.
 - Tokens / cost (from /cost): TODO
+
+---
+
+## Session 09b: Fix reliability issue 1 (a crashed run blocks the room)
+- Date/time: 2026-11-22
+- Goal: Fix issue 1 from [docs/design/13-reliability.md](design/13-reliability.md) on `fix/stuck-runs`, small and safe: heartbeat, one stale rule, lazy reaper in `startRun`, a "stuck" note in the UI. No change to quota rules, retries or card saving. No merge, no deploy.
+- My prompt: [docs/prompts/09b-fix-stuck-runs.md](prompts/09b-fix-stuck-runs.md).
+- What the agent did:
+  - Added `lastProgressAt` to runs (set at start, at each step begin/end, and on each tool call); one pure function `isRunStale(run, now, staleMs)` plus `staleRunMs()` for the `STALE_RUN_MS` setting (default 180000).
+  - `startRun`: when the lock is taken, `freeDeadLock` checks the holder. A stale run is marked `failed` ("Run stopped responding: marked as failed") and its lock removed; a live run is refused. Every write result is checked.
+  - Pipeline: the cards step and the next-step check treat any ended run (not only `stopped`) as a reason to stop without saving; `failRun` no longer overwrites a run that already ended.
+  - Issue 2 came with it: a live run's lock is judged by progress, not by the 15-minute TTL (the TTL stays as the fallback for runs that ended or are missing).
+  - UI: "This run seems stuck. Click Run scout to start a new one." and the button is enabled when the latest run is stale (owner/researcher).
+  - Tests: `isRunStale` unit tests, 8 `startRun` unit tests, 3 pipeline tests, 4 e2e tests with the new `[fake:hang]` marker; script `npm run check:reliability`.
+  - Docs: 06, 07, 10, 11 (R11), 13 (issues 1 and 2 FIXED), token usage rows 09a/09b.
+- Decisions: the fake hang lasts 12 s, then answers (not forever), so the test server's job queue is not blocked for good; it also lets the "job resumes after being reaped" case run. The browser's stuck note uses the 3-minute default; only the server decides. Option C (Stop frees the lock of a running run) and a cron reaper were not done.
+- Test results: `npm run check:reliability` green (31 unit + 4 e2e). `npx deepspace test run all`, foreground, 3 runs: 3 of 3 green (102 unit + 27 Playwright each time). `tsc --noEmit` and eslint clean.
+- What I verified myself:  I found the 6 reliability issues in my own review
+  and chose to fix only the high-risk one (#1) before the deadline. I read
+  PR #8 and ran `npm run check:reliability` myself on the branch: all tests
+  passed (a hung run is reaped after the stale time, a slow but progressing
+  run is not, only one new run wins, viewers still can't start). I can't
+  crash a job on the live site, so the automated checks are my proof for
+  the crash case; live, I checked that a normal run still works.
+- Tokens / cost (from /cost): see [token-usage.md](token-usage.md) (09b row is a snapshot)

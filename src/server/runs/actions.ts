@@ -2,7 +2,7 @@
 import { enqueueJob } from 'deepspace/worker'
 import type { ActionHandler } from 'deepspace/worker'
 import type { Env } from '../../../worker'
-import { ACTIVE_STATUSES, RUN_LOCK_TTL_MS } from '../../lib/run-types'
+import { ACTIVE_STATUSES, RUN_LOCK_TTL_MS, STALE_RUN_MESSAGE, isRunStale, staleRunMs } from '../../lib/run-types'
 import type { RunRecord } from '../../lib/run-types'
 import type { RoomRecord } from '../../lib/room-types'
 import { getProviders } from '../../providers'
@@ -26,6 +26,41 @@ async function requireRunner(
   return m.role === 'owner' || m.role === 'researcher' ? true : fail(`forbidden: role=${m.role}`)
 }
 
+/**
+ * Called when the room's lock is taken. Frees it only if its holder is dead; returns true if freed.
+ *   - holder run is queued/running and NOT stale -> keep the lock (judged by progress, not by the TTL)
+ *   - holder run is queued/running and stale     -> mark it failed, then free the lock (the lazy reaper)
+ *   - holder run ended or is missing             -> fall back to the old rule: free once `expiresAt` passed
+ * Every write is checked; on any failure we return false and the caller refuses cleanly. Two callers can
+ * race here: each removes the lock by its own record id, so only one remove can succeed per lock row.
+ */
+async function freeDeadLock(
+  tools: Parameters<ActionHandler<Env>>[0]['tools'],
+  roomId: string,
+  staleMs: number,
+): Promise<boolean> {
+  const held = await tools.query<{ runId: string; expiresAt: number }>('run_locks', { where: { teamId: roomId }, limit: 1 })
+  const row = held.success ? held.data.records[0] : undefined
+  if (!row) return false
+  const holder = await tools.get<RunRecord>('runs', row.data.runId)
+  const run = holder.success ? holder.data.record.data : undefined
+  const now = Date.now()
+
+  if (run && ACTIVE_STATUSES.includes(run.status)) {
+    if (!isRunStale(run, now, staleMs)) {
+      // Alive. Only a run with no heartbeat at all (older than this field) may still expire by TTL.
+      if (typeof run.lastProgressAt === 'number' || row.data.expiresAt >= now) return false
+    } else {
+      const failed = await tools.update('runs', row.data.runId, { status: 'failed', error: STALE_RUN_MESSAGE })
+      if (!failed.success) return false
+    }
+  } else if (row.data.expiresAt >= now) {
+    return false
+  }
+  const removed = await tools.remove('run_locks', row.recordId)
+  return removed.success
+}
+
 export const startRun: ActionHandler<Env> = async ({ userId, params, tools, env }) => {
   const roomId = str(params.roomId)
   const allowed = await requireRunner(tools, roomId, userId)
@@ -43,14 +78,10 @@ export const startRun: ActionHandler<Env> = async ({ userId, params, tools, env 
   const lockData = { teamId: roomId, runId, expiresAt: Date.now() + RUN_LOCK_TTL_MS }
   let lock = await tools.create('run_locks', lockData)
   if (!lock.success) {
-    // A dead job leaves a stale lock; take it over only once it has expired.
-    const held = await tools.query<{ expiresAt: number }>('run_locks', { where: { teamId: roomId }, limit: 1 })
-    const row = held.success ? held.data.records[0] : undefined
-    if (row && (row.data as { expiresAt: number }).expiresAt < Date.now()) {
-      await tools.remove('run_locks', row.recordId)
-      lock = await tools.create('run_locks', lockData)
-    }
-    if (!lock.success) return fail('a run is already active in this room')
+    const freed = await freeDeadLock(tools, roomId, staleRunMs(env.STALE_RUN_MS))
+    if (!freed) return fail('a run is already active in this room')
+    lock = await tools.create('run_locks', lockData)
+    if (!lock.success) return fail('a run is already active in this room') // another click won the room
   }
   const release = () => tools.deleteWhere('run_locks', { teamId: roomId, runId })
 
@@ -68,7 +99,7 @@ export const startRun: ActionHandler<Env> = async ({ userId, params, tools, env 
 
   const created = await tools.create(
     'runs',
-    { teamId: roomId, question, status: 'queued', toolCallsUsed: 0, error: '', startedBy: userId } satisfies RunRecord,
+    { teamId: roomId, question, status: 'queued', toolCallsUsed: 0, error: '', startedBy: userId, lastProgressAt: Date.now() } satisfies RunRecord,
     runId,
   )
   if (!created.success) {

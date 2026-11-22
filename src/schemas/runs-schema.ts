@@ -39,6 +39,7 @@ export const runsSchema: CollectionSchema = {
     number('toolCallsUsed'),
     text('error'),
     text('startedBy', { required: true }),
+    number('lastProgressAt'),
   ],
   teamField: 'teamId',
   permissions: teamRead,

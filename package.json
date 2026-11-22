@@ -22,6 +22,7 @@
     "test:api": "deepspace test run api",
     "test:e2e": "deepspace test run e2e",
     "test:unit": "vitest run --passWithNoTests",
+    "check:reliability": "vitest run src/lib/run-types.test.ts src/server/runs/actions.test.ts src/server/runs/pipeline.test.ts && deepspace test run e2e --grep \"stuck runs\"",
     "test:watch": "vitest",
     "validate": "tsc --noEmit && vitest run --passWithNoTests",
     "screenshot": "deepspace test screenshot",

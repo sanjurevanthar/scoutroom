@@ -5,6 +5,9 @@ import { defaultSleep } from './http'
 
 export const FAKE_FAIL_MARKER = '[fake:fail]'
 export const FAKE_RATE_LIMIT_MARKER = '[fake:429]'
+/** A call that stalls for FAKE_HANG_MS, like a stuck provider, then answers normally. */
+export const FAKE_HANG_MARKER = '[fake:hang]'
+export const FAKE_HANG_MS = 12_000
 
 export type FakeResponder = (messages: ChatMessage[], schema?: JsonSchemaSpec) => string | Promise<string>
 
@@ -20,8 +23,9 @@ function sourcesFrom(messages: ChatMessage[]): { url: string; title: string }[] 
   }
 }
 
-export const defaultFakeResponder: FakeResponder = (messages, schema) => {
+export const defaultFakeResponder: FakeResponder = async (messages, schema) => {
   const everything = messages.map((m) => m.content).join('\n')
+  if (everything.includes(FAKE_HANG_MARKER)) await defaultSleep(FAKE_HANG_MS)
   if (everything.includes(FAKE_RATE_LIMIT_MARKER)) throw new RateLimitedError()
   if (everything.includes(FAKE_FAIL_MARKER)) throw new Error('fake failure')
   if (schema?.name === 'plan') {
