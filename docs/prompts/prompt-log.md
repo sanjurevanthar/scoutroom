@@ -406,3 +406,82 @@ If not working within 75 minutes: open a DRAFT PR, explain what's missing,
 and STOP. We'll ship on the free providers instead.
 </pasted_content id="27d3">
 
+### 2026-11-22 19:41 · session 284cf9cf
+
+
+<pasted_content id="ff9c">
+FINAL DOCS AUDIT (before submission). Time-box: 20 minutes.
+Phase 1 is READ-ONLY: do not edit, commit, or create files. Do NOT add
+agent-log entries or prompt files for this audit.
+
+Audience: DeepSpace reviewers. Check README.md, docs/design/00–13,
+docs/agent-log.md, docs/token-usage.md, docs/prompts/, CLAUDE.md, against
+the actual code and git history.
+
+Check:
+1. Accuracy vs code: every claim in README and docs matches the code
+   (features F1–F4, roles, run limit 5, brief limit 5, stale-run reaper,
+   LLM_PROVIDER/SEARCH_PROVIDER values, test commands, npm scripts).
+2. Integrations story is consistent everywhere: anthropic/chat-completion
+   and exa/search IN USE; scholar/search-papers built, not default (provider
+   out of searches); Groq/OpenAlex/Wikipedia = free fallback, never called
+   "DeepSpace integrations". History only in
+</pasted_content id="ff9c">
+
+### 2026-11-22 19:43 · session 284cf9cf
+
+
+<pasted_content id="ff9c">
+go: Phase 2, time-box 20 minutes. Branch docs/final-audit from main, PR, no merge.
+
+Fix:
+- Items 1–6 and 8 from your audit, plus the "fallback" note on R4, R6, R7.
+  For item 8, use the real numbers from `npx deepspace app usage`.
+- Fix item 5 so T9 says CONFIRMED (session 10) in both places.
+- docs/token-usage.md: add rows for Sessions 08 and 10 from
+  `npx ccusage session --json` (write "not found" if a session isn't in the
+  logs). Update the Total row, and make README say "Sessions 00–10" with
+  the new total.
+- Skip the agent-log reordering. Don't add an 08b entry (that session was
+  undone).
+- Delete the stale branch docs/readme-credits-fix locally and on the remote.
+
+Also run the checks that were cut off from my prompt (report + fix):
+3. F1–F4 marked as done everywhere; future items clearly marked future.
+4. Every relative link in README and docs/ points to a file that exists;
+   docs/design/00-README.md lists docs 00–13.
+5. Mermaid diagrams: valid syntax.
+6. List every agent-log session whose "What I verified myself" is EMPTY
+   (don't fill them: I will).
+7. No API keys, tokens, emails, full home paths (/Users/...) or other
+   project names in any committed doc.
+9. Test counts, token totals and credit figures consistent across files.
+
+Don't change code. Don't commit docs/prompts/prompt-log.md (I'll do it).
+Commit (the secret check must pass), push, open a PR, report briefly. STOP.
+</pasted_content id="ff9c">
+
+### 2026-11-22 19:48 · session 284cf9cf
+
+
+<pasted_content id="ff9c">
+README fixes before submission. Branch docs/readme-final, PR, no merge.
+Verify each against the code first:
+1. Line 11: only owners and researchers vote; viewers see counts.
+2. Line 9: check how invite links assign roles in the code and describe it
+   exactly (I believe: joins as researcher; owner can change to viewer).
+3. Add a short "Main tradeoff" section after "What it does": bounded,
+   visible agent (step budget, run limit, strict JSON, citations must point
+   to real kept cards): cheaper and the team stays in control; AI and
+   search behind provider interfaces so the provider is a setting.
+4. Line 66: show Scholar's cost in credits (~3.25 credits/call), and say it
+   is contract-tested against the documented response shape (not a recording).
+5. Line 35: fallback secrets = Groq key and OpenAlex key.
+6. Run locally: add `git clone`, note that wrangler.toml holds my app id
+   (use `npx deepspace app init --new-id` for your own app), and
+   `git config core.hooksPath .githooks` for the secret check.
+7. Nits: explain "seq" in plain words; reword "the agent has no tools" to
+   "the model can't call tools or write records; only our code saves data".
+Don't change code. Commit (secret check), push, open a PR. STOP.
+</pasted_content id="ff9c">
+
