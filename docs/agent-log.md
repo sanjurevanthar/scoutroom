@@ -218,7 +218,12 @@ How I directed the coding agent, session by session. Each entry follows this tem
   - `scholar/search-papers` failed on DeepSpace's side ("SerpAPI error 429: Your account has run out of searches", HTTP 502, billing released). I asked; the answer was to use Exa's research-paper mode for papers, keep Scholar built but not default (`SEARCH_PROVIDER = "deepspace-scholar"`), and not claim three integrations in use.
   - Scholar gets one query per run (`maxQueries`) because it costs $0.0325 a call. Exa papers use two.
 - Test results: see the PR. `npm run check:reliability` green; `npx deepspace test run all` 3 of 3 green in the foreground.
-- What I verified myself:
+- What I verified myself: I reviewed PR #12, merged it and deployed from main.
+  On the live site I created a new room, ran the scout and wrote a brief; both
+  worked through DeepSpace integrations (Claude Haiku + Exa), and
+  `npx deepspace app usage` showed the credits being used. Scholar is built but
+  not default because DeepSpace's Scholar provider was out of searches during
+  the build.
 - Tokens / cost (from /cost): see [token-usage.md](token-usage.md) (no row for this session yet)
 
 ---
