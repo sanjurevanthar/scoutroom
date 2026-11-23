@@ -38,6 +38,8 @@ export interface SearchHit {
 export interface SearchProvider {
   readonly name: string
   readonly kind: SourceKind
+  /** Cost control: at most this many queries per run (the pipeline default is 2). */
+  readonly maxQueries?: number
   search(query: string, signal?: AbortSignal): Promise<SearchHit[]>
 }
 
@@ -60,5 +62,24 @@ export class ProviderConfigError extends Error {
   constructor(message: string) {
     super(message)
     this.name = 'ProviderConfigError'
+  }
+}
+
+/** The provider says we are out of credits (DeepSpace 402). Message is shown to users. */
+export class CreditsExhaustedError extends Error {
+  constructor() {
+    super('Out of DeepSpace credits. Ask the app owner to add credits, then try again.')
+    this.name = 'CreditsExhaustedError'
+  }
+}
+
+/** A provider call failed. `message` is written by us and safe to show; provider internals go in `code` (logs only). */
+export class ProviderError extends Error {
+  constructor(
+    message: string,
+    readonly code?: string,
+  ) {
+    super(message)
+    this.name = 'ProviderError'
   }
 }

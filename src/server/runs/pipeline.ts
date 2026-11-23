@@ -10,7 +10,7 @@
  */
 import { MAX_TOOL_CALLS } from '../../lib/run-types'
 import type { Providers, SearchHit } from '../../providers/types'
-import { ProviderConfigError, RateLimitedError } from '../../providers/types'
+import { CreditsExhaustedError, ProviderConfigError, ProviderError, RateLimitedError } from '../../providers/types'
 import { parseCards, parsePlan } from './cards'
 import type { Plan } from './cards'
 import { CARDS_SCHEMA, PLAN_SCHEMA, cardsMessages, planMessages, repairMessages } from './prompts'
@@ -56,7 +56,9 @@ export class BudgetExceededError extends RunFailure {
 
 /** Turns any error into the sentence shown on the failed run. Never includes provider internals. */
 export function humanMessage(e: unknown): string {
+  if (e instanceof CreditsExhaustedError) return e.message
   if (e instanceof RateLimitedError) return 'Rate limited, try again.'
+  if (e instanceof ProviderError) return e.message
   if (e instanceof RunFailure) return e.message
   if (e instanceof ProviderConfigError) return 'AI provider not configured.'
   if (e instanceof DOMException && (e.name === 'TimeoutError' || e.name === 'AbortError')) {
@@ -115,7 +117,7 @@ export async function runTick(state: RunState, deps: PipelineDeps): Promise<RunS
         break
       }
       case 'papers': {
-        const queries = state.plan?.paperQueries.slice(0, 2) ?? [state.question]
+        const queries = state.plan?.paperQueries.slice(0, providers.papers.maxQueries ?? 2) ?? [state.question]
         let failed = 0
         const hits = [...state.hits]
         for (const q of queries) {
@@ -123,7 +125,7 @@ export async function runTick(state: RunState, deps: PipelineDeps): Promise<RunS
           try {
             hits.push(...(await providers.papers.search(q, signal)))
           } catch (e) {
-            if (e instanceof BudgetExceededError) throw e
+            if (e instanceof BudgetExceededError || e instanceof CreditsExhaustedError) throw e
             failed += 1
           }
         }
@@ -138,7 +140,8 @@ export async function runTick(state: RunState, deps: PipelineDeps): Promise<RunS
         const hits = [...state.hits]
         try {
           hits.push(...(await providers.background.search(state.plan?.backgroundQuery ?? state.question, signal)))
-        } catch {
+        } catch (e) {
+          if (e instanceof CreditsExhaustedError) throw e
           failed = true
         }
         const all = dedupe(hits)

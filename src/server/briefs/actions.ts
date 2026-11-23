@@ -2,7 +2,7 @@
  * generateBrief (F4): owner and researcher only. Uses ONLY kept cards (the rule in lib/votes.ts),
  * one short LLM call inside the action (no job: docs/design/07 "Brief (F4)"), strict JSON, citations checked.
  */
-import type { ActionHandler } from 'deepspace/worker'
+import type { ActionHandler, ActionTools } from 'deepspace/worker'
 import type { Env } from '../../../worker'
 import { BRIEF_LIMIT, keptCardIds } from '../../lib/brief'
 import type { BriefRecord } from '../../lib/brief'
@@ -11,7 +11,7 @@ import type { RoomRecord } from '../../lib/room-types'
 import type { VoteRecord } from '../../lib/votes'
 import { getLlm } from '../../providers'
 import type { LLMProvider } from '../../providers/types'
-import { ProviderConfigError, RateLimitedError } from '../../providers/types'
+import { CreditsExhaustedError, ProviderConfigError, ProviderError, RateLimitedError } from '../../providers/types'
 import { fail, failFrom, isFail, requireMember } from '../rooms/access'
 import { parseBrief } from './parse'
 import { BRIEF_SCHEMA, briefMessages, briefRepairMessages } from './prompts'
@@ -22,7 +22,7 @@ const READ_LIMIT = 500
 export const NO_KEPT_MESSAGE = 'Keep at least one card first'
 export const limitMessage = (used: number) => `brief limit reached (${used} of ${BRIEF_LIMIT} used)`
 
-export function makeGenerateBrief(llmFor: (env: Env) => LLMProvider): ActionHandler<Env> {
+export function makeGenerateBrief(llmFor: (env: Env, tools: ActionTools) => LLMProvider): ActionHandler<Env> {
   return async ({ userId, params, tools, env }) => {
     const roomId = str(params.roomId)
     if (!roomId) return fail('roomId is required')
@@ -63,7 +63,7 @@ export function makeGenerateBrief(llmFor: (env: Env) => LLMProvider): ActionHand
 
     let llm: LLMProvider
     try {
-      llm = llmFor(env)
+      llm = llmFor(env, tools)
     } catch {
       return fail('AI provider not configured')
     }
@@ -82,7 +82,9 @@ export function makeGenerateBrief(llmFor: (env: Env) => LLMProvider): ActionHand
       if (!parsed.ok) return fail('The AI did not return a brief we could verify. Try again.')
       ;({ paragraphs, citedCardIds } = parsed)
     } catch (e) {
+      if (e instanceof CreditsExhaustedError) return fail(e.message)
       if (e instanceof RateLimitedError) return fail('rate limited, try again')
+      if (e instanceof ProviderError) return fail(e.message)
       if (e instanceof ProviderConfigError) return fail('AI provider not configured')
       // Log the kind only: never request data, never provider internals.
       console.error(`[brief] room=${roomId} ${e instanceof Error ? e.name : 'error'}`)
@@ -114,6 +116,6 @@ export function makeGenerateBrief(llmFor: (env: Env) => LLMProvider): ActionHand
   }
 }
 
-export const generateBrief = makeGenerateBrief((env) => getLlm(env))
+export const generateBrief = makeGenerateBrief((env, tools) => getLlm(env, tools.integration))
 
 export const briefActions: Record<string, ActionHandler<Env>> = { generateBrief }

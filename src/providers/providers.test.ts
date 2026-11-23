@@ -156,12 +156,9 @@ describe('getProviders', () => {
     const p = getProviders({ GROQ_API_KEY: FAKE_KEY })
     expect([p.llm.name, p.papers.name, p.background.name]).toEqual(['groq', 'openalex', 'wikipedia'])
   })
-  it('picks fakes and DeepSpace stubs by setting', async () => {
+  it('picks fakes by setting', () => {
     const fake = getProviders({ LLM_PROVIDER: 'fake', SEARCH_PROVIDER: 'fake' })
     expect(fake.llm.name).toBe('fake')
-    const ds = getProviders({ LLM_PROVIDER: 'deepspace', SEARCH_PROVIDER: 'deepspace' })
-    await expect(ds.llm.complete([])).rejects.toThrow('not tested: no DeepSpace credits')
-    await expect(ds.papers.search('x')).rejects.toThrow('not tested: no DeepSpace credits')
   })
   it('rejects unknown settings', () => {
     expect(() => getProviders({ LLM_PROVIDER: 'nope' })).toThrow(ProviderConfigError)
