@@ -82,7 +82,7 @@
 - **Not changed:** a person who is only made a viewer keeps their earlier vote (they cannot change it, but it still counts).
 
 ### D13 · The brief is one server action; history kept, max 5 per room
-- **Decision:** `generateBrief` is a server action (one short Groq call), not a job. Briefs are kept as history (`briefs`, `uniqueOn teamId+seq`), the page shows the latest, and 5 per room is the cap. Citations are ids of kept cards, validated by zod; one repair, then a clean failure.
+- **Decision:** `generateBrief` is a server action (one short model call through the `LLMProvider`), not a job. Briefs are kept as history (`briefs`, `uniqueOn teamId+seq`), the page shows the latest, and 5 per room is the cap. Citations are ids of kept cards, validated by zod; one repair, then a clean failure.
 - **Why:** no steps to watch, so a job adds nothing; history means a bad regenerate cannot destroy a good brief and the limit is a simple count; `seq` makes the limit race-proof (see [07](07-agent-run-design.md#brief-f4)).
 - **Tradeoff:** a slow model could hit the action time limit (T1 in 07, not measured for this call); history uses up to 5 rows per room. The 5 limit also counts briefs nobody reads.
 
@@ -96,10 +96,10 @@
 | R1 | `team` reads do not work with our `team_members` shape (T2) | medium | Use `collaboratorsField` (JSON array of user ids) on each record; or one `RecordRoom` scope per room. |
 | R2 | Job queue runs one job at a time for the **whole app** (T5) | medium | Accept for the demo; else a job room per ScoutRoom or shorter steps. |
 | R3 | Job path fails the spike (T4, T6) | medium | Plan B: one action, fixed pipeline. |
-| R4 | Groq model does not return clean JSON (T14) | medium | zod validation; repair call (Plan A); stricter prompt; fall back to a different model id. |
+| R4 | Free fallback only: the Groq model does not return clean JSON (T14) | medium | zod validation; repair call (Plan A); stricter prompt; fall back to a different model id. |
 | R5 | Search gives weak or irrelevant results | medium | Show results transparently in steps; humans vote. Exa is the default; the free fallback is weaker. |
-| R6 | Free API rate limits or downtime (OpenAlex: shared $0.10/day per IP without a key, about 100 requests; Wikipedia) | high | Retry once, skip the failed query, keep going; demo from the seeded room. |
-| R7 | Groq key leaks, or free-tier rate limits (429) stall runs | low | Secrets store only; 429 retry/backoff and "rate limited, try again" status; redaction + pre-commit scan; rotate key. |
+| R6 | Free fallback only: rate limits or downtime (OpenAlex: shared $0.10/day per IP without a key, about 100 requests; Wikipedia) | high | Retry once, skip the failed query, keep going; demo from the seeded room. |
+| R7 | Free fallback only: the Groq key leaks, or free-tier rate limits (429) stall runs | low | Secrets store only; 429 retry/backoff and "rate limited, try again" status; redaction + pre-commit scan; rotate key. |
 | R8 | Deadline (Sunday night) | high | Cut F4 first. Then simplify invites to one researcher link. Demo from a seeded room. |
 | R9 | AI returns weak or empty cards | medium | Repair call (Plan A); show "no usable cards" with the steps. |
 | R10 | Prompt injection works partly | medium | Humans vote; LLM has no tools; URL allowlist (see 09). |
@@ -132,7 +132,7 @@ Groq model chosen: **`openai/gpt-oss-20b`** (from `GET /models`: small and fast,
 | T1 server-action time limit | **STILL UNKNOWN** | Not tested (local dev does not show production limits). The docs give no number for an action; they say `waitUntil` work is killed 30 s after the response, and a job alarm has a 15-minute wall time. So long work must go in the job, not an action. This is why Plan A is preferred. |
 | T11 `ctx.continue` size and behavior | **STILL UNKNOWN** | The docs describe it (`resumeFrom` holds the last checkpoint; retries re-run the handler) but give no size limit. Not needed: one pass of plan, search and cards fits well inside 15 minutes. |
 | T8 per-room presence API | **STILL UNKNOWN** | Not part of this spike. |
-| T9 DeepSpace integration fields | **CONFIRMED later (session 10)** | Real calls to `anthropic/chat-completion` and `exa/search` returned the fields the adapters use (recorded in `src/providers/fixtures/`). `scholar/search-papers` failed upstream (R14). |
+| T9 DeepSpace integration fields | **CONFIRMED (session 10)** | Real calls to `anthropic/chat-completion` and `exa/search` returned the fields the adapters use (recorded in `src/providers/fixtures/`). `scholar/search-papers` failed upstream (R14). |
 | T2 original: `read: 'team'` with `team_members` | **STILL UNKNOWN** | Spike used `read: true` and a role column checked in the action. The team-read rule was not tested. |
 
 ### New findings that change the plan
@@ -161,7 +161,7 @@ interface LLMProvider { complete(messages, jsonSchema?): Promise<{ text; usage? 
 | T6 | Job handler can write records and make outbound `fetch` calls (docs show `buildCronContext` for cron) | Core run loop | Spike |
 | T7 | `createdBy` on records written by an action or job | `own` rules, audit | Spike |
 | T8 | Per-room presence API (`usePresenceRoom` signature) | "Who is online" per room | `/sdk-reference/client/realtime` |
-| T9 | Exact response fields of the DeepSpace integrations | Later switch only | `npx deepspace integrations invoke` once each (needs credits) |
+| T9 | Exact response fields of the DeepSpace integrations | **CONFIRMED (session 10)** | Real calls to `anthropic/chat-completion` and `exa/search`; samples in `src/providers/fixtures/` |
 | T11 | Size limit and behavior of `ctx.continue(state)` | Step loop | Docs + spike |
 | T12 | How to create test accounts for two-user tests | Testing | `npx deepspace test accounts --help` |
 | T13 | Outbound `fetch` from server code / job handler to OpenAlex, Wikipedia, Groq (Groq base URL `https://api.groq.com/openai/v1`; pick a free-tier model id) | `GroqProvider` | Spike |

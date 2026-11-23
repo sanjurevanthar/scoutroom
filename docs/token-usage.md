@@ -1,6 +1,6 @@
 # Token usage
 
-Real numbers for sessions 00-07 (the Total row still covers sessions 00-07 only; rows 09a and 09b were added later and are not in it), from Claude Code's local logs via `npx ccusage session --json`. No number below is estimated by hand. Collected 2026-11-22.
+Real numbers for sessions 00-10 (the Total row covers every row; session 08 and 10 are one log file each, see below), from Claude Code's local logs via `npx ccusage session --json`. No number below is estimated by hand. Collected 2026-11-22.
 
 | Session | Date | Feature | Input tokens | Output tokens | Cache read | Cache write | Est. cost | What saved / wasted tokens |
 |---|---|---|---:|---:|---:|---:|---:|---|
@@ -14,7 +14,9 @@ Real numbers for sessions 00-07 (the Total row still covers sessions 00-07 only;
 | 07 | 2026-11-22 | Feature 4: brief | 70 | 41,304 | 4,156,580 | 134,556 | $1.37 | saved: foreground test runs (0 Monitor or sleep calls) and reuse of the existing kept-card rule. wasted: 9 design docs updated in one session (peak context ~162k) |
 | 09a | 2026-11-22 | Reliability document (docs only) | 26 | 13,991 | 935,375 | 75,830 | $0.54 | saved: docs-only scope, no test runs. wasted: not measured |
 | 09b | 2026-11-22 | Fix stuck runs (issue 1) | 50 | 24,777 | 2,485,471 | 101,086 | $0.90 | snapshot taken before the docs and PR steps finished: fill the final row after the session. Test runs were foreground (0 Monitor or sleep shell calls) |
-| **Total** | | | **578** | **316,275** | **29,231,496** | **1,133,624** | **$10.62** | |
+| 08 | 2026-11-22 | README (the 08b README attempt and its undo share this log) | 38 | 15,042 | 1,479,266 | 69,920 | $0.58 | one log file covers the README, the undone 08b attempt and its cleanup; not split. wasted: the 08b attempt |
+| 10 | 2026-11-22 | Switch AI + search to DeepSpace integrations | 94 | 54,187 | 6,189,382 | 171,651 | $1.85 | snapshot of the whole log (last activity before the final PR steps); real-integration checks cost about 3 credits, not tokens |
+| **Total** | | | **786** | **424,272** | **40,320,990** | **1,552,111** | **$14.49** | |
 
 **I use a Claude Pro subscription, so this is an estimate of the API cost, not money spent.** "Est. cost" is ccusage's API-equivalent price for the tokens in each row.
 
@@ -30,7 +32,7 @@ Real numbers for sessions 00-07 (the Total row still covers sessions 00-07 only;
 
 ## How I kept token use low
 
-- **Prompt caching did most of the work.** 95.3% of all tokens in these sessions are cache reads, priced at $0.10 per million instead of $2 for fresh input. Fresh input tokens total only 578 across eight sessions.
+- **Prompt caching did most of the work.** 95.3% of all tokens in these sessions are cache reads, priced at $0.10 per million instead of $2 for fresh input. Fresh input tokens total only 786 across twelve sessions.
 - **One feature per session, with a plan first.** Sessions 02-07 each cost between $0.90 and $2.01; no session re-explained earlier work, because the design docs and `docs/agent-log.md` carry the context.
 - **Docs MCP and the saved catalogs instead of pasted docs** (9 searches and 3 reads in Session 01), so the docs were fetched when needed.
 - **Fake providers in automated tests (Sessions 04-07).** Test runs make no Groq or OpenAlex calls, so they cost no free-tier quota. The one slip (Session 04, tests briefly hitting the real providers) is in the table.

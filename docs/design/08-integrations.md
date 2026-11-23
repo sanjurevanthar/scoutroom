@@ -49,8 +49,8 @@ Non-secret settings in the worker config (`wrangler.toml` `[vars]`), read by `ge
 
 | Setting | Values | Production |
 |---|---|---|
-| `LLM_PROVIDER` | `deepspace` / `groq` / `fake` (tests) | `deepspace` |
-| `SEARCH_PROVIDER` | `deepspace` / `deepspace-scholar` / `free` / `fake` (tests) | `deepspace` |
+| `LLM_PROVIDER` | `deepspace` / `groq` / `fake` (tests) | `deepspace` (value in `wrangler.toml`; if a setting is unset, the code falls back to `groq`) |
+| `SEARCH_PROVIDER` | `deepspace` / `deepspace-scholar` / `free` / `fake` (tests) | `deepspace` (value in `wrangler.toml`; if unset, the code falls back to `free`) |
 | `DEEPSPACE_LLM_MODEL` | any model id `anthropic/chat-completion` accepts | unset (default `claude-haiku-5-5`) |
 
 The two settings are independent (for example Claude through DeepSpace with free search). The DeepSpace adapters need **no secret**. Only the free fallback needs one (`GROQ_API_KEY`, set with `npx deepspace secrets set`, never in `wrangler.toml`, code or git). If the chosen provider cannot be built, `startRun` refuses early (see [07](07-agent-run-design.md)).
@@ -67,7 +67,7 @@ Server actions and background jobs both get `tools.integration(endpoint, body)` 
 
 ### Cost per run
 
-Measured on a real run: 2 Claude calls, 3 Exa searches (2 paper queries, 1 background), about **3 credits** (100 credits = $1). A brief is one Claude call, well under 0.1 credit. With `deepspace-scholar` a run is about 4 credits (one Scholar query, one Exa search, two Claude calls). Check spend with `npx deepspace app usage`.
+Measured on a real run: 2 Claude calls, 3 Exa searches (2 paper queries, 1 background), about **3 credits** (100 credits = $1). A Claude call costs about 0.05 credit (7 calls cost $0.0031 in `npx deepspace app usage`), so a brief is about 0.05 credit; Exa cost $0.06 for 7 searches, about 0.9 credit each. With `deepspace-scholar` a run is about 4 credits (one Scholar query, one Exa search, two Claude calls). Check spend with `npx deepspace app usage`.
 
 ### Errors
 

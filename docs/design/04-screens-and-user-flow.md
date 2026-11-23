@@ -75,7 +75,7 @@
 | We recommend X because it supports hybrid search [1].      |
 | Y is cheaper at small scale [2] [3].                       |
 | [1] Qdrant supports hybrid... -> source link               |
-| Brief 2 · written from 3 kept cards by groq/<model>        |
+| Brief 2 · written from 3 kept cards by deepspace/<model>    |
 +------------------------------------------------------------+
 ```
 - Each `[n]` is a button. Clicking it clears the card filter, scrolls to that card on the board and highlights it for a few seconds.

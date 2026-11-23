@@ -9,26 +9,26 @@ flowchart LR
   subgraph Browser
     UI[React pages\nuseQuery live data]
   end
-  subgraph DeepSpace platform
+  subgraph PLT["DeepSpace platform"]
     AUTH[Auth / sign-in]
     REC[(RecordRoom\nDurable Object\nrooms, cards, runs...)]
     JOB[JobRoom\nbackground jobs]
     PROXY[Integration proxy\nbilled to the app owner]
   end
-  subgraph Our worker - server
+  subgraph WRK["Our worker - server"]
     ACT[Server actions\nstartRun, castVote, invite...]
     RUN[Run job handler\nsrc/jobs.ts]
   end
-  subgraph Provider layer - our code
+  subgraph PRV["Provider layer - our code"]
     LLM[LLMProvider interface]
     SRCH[SearchProvider interface]
   end
-  subgraph DeepSpace integrations - default
+  subgraph INT["DeepSpace integrations - default"]
     AN[anthropic/chat-completion]
     EXA[exa/search]
     SCH[scholar/search-papers - built, not in use]
   end
-  subgraph Free fallback - external providers
+  subgraph FRE["Free fallback - external providers"]
     GROQ[Groq - GROQ_API_KEY]
     OA[OpenAlex - papers]
     WIKI[Wikipedia]
