@@ -213,7 +213,7 @@ zod, `.strict()`: 1-4 paragraphs (the prompt asks for 2-4; a room with a single 
 
 **Limit.** 5 briefs per room (`BRIEF_LIMIT`). Only saved briefs count, so a failed attempt (429, bad JSON) does not use one. `briefs` has `uniqueOn teamId+seq`; the save takes `seq = highest + 1` and re-checks the limit; if two requests race for a slot, the loser re-reads and either takes the next slot or is refused at 5. Tested with two simultaneous requests.
 
-**Failures.** Groq 429 (after the provider's own short backoff) -> "rate limited, try again". Missing key -> "AI provider not configured". Anything else -> "Could not write the brief. Try again." (the log line has the error kind only, never request data).
+**Failures.** Out of DeepSpace credits (402) -> "Out of DeepSpace credits. Ask the app owner to add credits, then try again." A provider error -> "The AI service is unavailable right now. Try again in a minute." A 429 (after the provider's own short backoff, for Groq) -> "rate limited, try again". Missing key or setting -> "AI provider not configured". Anything else -> "Could not write the brief. Try again." (the log line has the error kind only, never request data).
 
 **Stale.** `keptCardIds` (sorted) is saved with each brief. The page compares it, as a set, with the kept cards now; if they differ it shows "Stale: votes changed since this brief".
 

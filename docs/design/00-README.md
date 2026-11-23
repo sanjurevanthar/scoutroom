@@ -15,7 +15,7 @@ Tags used everywhere: **[THIS BUILD]** (due Sunday night) and **[FUTURE]** (docu
 | 05 | [Architecture](05-architecture.md) | Components, which DeepSpace service does what, code layout |
 | 06 | [Data model](06-data-model.md) | Collections, fields, relations, example record |
 | 07 | [Agent run design](07-agent-run-design.md) | The core feature: steps, status, JSON format, budget, failures |
-| 08 | [Providers and integrations](08-integrations.md) | LLM and search interfaces; Groq + OpenAlex + Wikipedia now, DeepSpace later; what is left out |
+| 08 | [Providers and integrations](08-integrations.md) | LLM and search interfaces; DeepSpace `anthropic` + `exa` integrations, Scholar ready, free fallback; what is left out |
 | 09 | [Security and privacy](09-security-and-privacy.md) | Secrets, server checks, prompt injection, stored data |
 | 10 | [Testing plan](10-testing-plan.md) | What we test, how, and a demo-day checklist |
 | 11 | [Decisions and risks](11-decisions-and-risks.md) | Key decisions, risks, **TO VERIFY list**, **open questions** |
@@ -30,7 +30,7 @@ Saved DeepSpace catalogs (`npx deepspace add --list`, `npx deepspace integration
 2. `startRun` (a server action) checks role, budget and a lock, then enqueues a **background job** (Plan A). If a short spike shows that path does not work, one action runs a fixed pipeline instead (Plan B).
 3. The job does **one step at a time** (plan, search up to 8 times, write cards), saving each step as a record.
 4. The browser just subscribes to those records, so everyone sees steps and cards **live**.
-5. AI and search sit behind two interfaces. Now: the owner's Groq key plus OpenAlex and Wikipedia, because DeepSpace credits are 0. Later: DeepSpace `anthropic`, `exa`, `scholar` by changing a setting. All calls happen on the server. The one secret lives in the DeepSpace secrets store, never in the browser or git.
+5. AI and search sit behind two interfaces and use the DeepSpace integrations `anthropic/chat-completion` and `exa/search` (`scholar/search-papers` is built and ready). A free fallback (Groq, OpenAlex, Wikipedia; external providers) is chosen with `LLM_PROVIDER` / `SEARCH_PROVIDER`. All calls happen on the server. The DeepSpace integrations need no secret; the fallback's Groq key lives in the DeepSpace secrets store, never in the browser or git.
 
 ## Glossary
 
@@ -53,8 +53,10 @@ Saved DeepSpace catalogs (`npx deepspace add --list`, `npx deepspace integration
 | **Provider interface** | A small contract (`LLMProvider`, `SearchProvider`) the agent uses, so the real service behind it can be swapped by a setting. |
 | **Spike** | A short throwaway test to answer risky questions before the real build. |
 | **Plan A / Plan B** | A: the run is a background job. B: the run is one server action with a smaller fixed pipeline. |
-| **OpenAlex / Wikipedia** | Free search sources (papers / general background) used until DeepSpace credits exist. |
-| **Groq** | The AI model provider used now (OpenAI-compatible API, free tier with rate limits), with the owner's key. |
+| **Exa** | Web search through the DeepSpace `exa/search` integration, used for background pages and research papers. |
+| **OpenAlex / Wikipedia** | Free search sources (papers / general background) of the fallback config. |
+| **Claude Haiku** | The AI model, through the DeepSpace `anthropic/chat-completion` integration (`claude-haiku-5-5`). |
+| **Groq** | The AI model of the free fallback config (OpenAI-compatible API, free tier with rate limits), with the owner's key. |
 | **Subscription / live query** | `useQuery` keeps a live connection; the server pushes changes, so no refresh is needed. |
 | **Presence** | Showing who is online. |
 | **Evidence card** | One claim + a source link + source type + confidence. |

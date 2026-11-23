@@ -6,7 +6,7 @@
 
 | Priority | Feature | Why it is next | DeepSpace piece it would use |
 |:-:|---|---|---|
-| 0 | **Switch to DeepSpace providers** | When credits exist: better web search (Exa), Google Scholar, Haiku. A config change, no agent change. | `anthropic/chat-completion`, `exa/search`, `scholar/search-papers` via the provider interfaces (see [08](08-integrations.md)) |
+| 0 | **Turn Scholar on** | `scholar/search-papers` is built and tested. When DeepSpace's Scholar provider works again, set `SEARCH_PROVIDER = "deepspace-scholar"` and record a real sample for the contract test. | `scholar/search-papers` via `ScholarSearch` (see [08](08-integrations.md)) |
 | 1 | **Challenge a card** (F5) | Most useful follow-up: humans steer the agent to dig deeper on one claim. Reuses the same run loop. | Same `startRun` action and job; a new step kind; `anthropic` + `exa` |
 | 2 | **Usage / cost dashboard per room** (F11) | Builds trust and protects the owner's wallet. | `npx deepspace app usage` data (TO VERIFY if an API exists); our `runs.searchCalls` / `aiCalls` counters |
 | 3 | **Room templates** (F10) | Faster start: competitor scan, literature review, tech choice are just prompt + query presets. | Plain data (a `templates` collection or constants) |

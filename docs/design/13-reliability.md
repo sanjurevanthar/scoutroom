@@ -102,7 +102,7 @@ So for issue 3 the design is "safe write order + self-healing", not a transactio
 
 | # | Testable check | Passes when |
 |:-:|---|---|
-| 1 | Kill or stub a job mid-run, wait past the stale threshold, click Start | Old run is `failed`, a new run starts, one lock exists (**automated**, `npm run check:reliability`) |
+| 1 | Kill or hang a job mid-run, wait past the stale threshold, click Start | Old run is `failed`, a new run starts, one lock exists (**automated**, `npm run check:reliability`) |
 | 2 | Expired lock but fresh `lastProgressAt` | Second `startRun` is refused (**automated**) |
 | 3 | Make the `runsUsed` update fail | `startRun` returns an error; counts stay correct |
 | 4 | Make the 3rd card save fail | The board shows no cards from that run |

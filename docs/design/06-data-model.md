@@ -130,7 +130,7 @@ Read: **owner only** (a custom server action returns the link; the code is never
 | claim | text | 1..280 chars |
 | sourceUrl | text | must be one of the URLs this run's searches returned |
 | sourceTitle | text | taken from our search hit, not from the model |
-| sourceType | select | `paper` (OpenAlex) / `background` (Wikipedia). Taken from our search hit |
+| sourceType | select | `paper` (Exa research papers, Scholar, or OpenAlex) / `background` (Exa web, or Wikipedia). Taken from our search hit |
 | confidence | number | 0 to 1. `background` cards are capped at 0.6 |
 
 Votes are **not** stored on the card. The keep/reject counts and the Kept / Rejected / Undecided status are computed from `votes` (see [Card decision rule](07-agent-run-design.md#card-decision-rule-f3)), so they cannot drift.

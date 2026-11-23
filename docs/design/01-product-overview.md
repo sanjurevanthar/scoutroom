@@ -57,13 +57,13 @@ Small teams (2-10 people) making a tech or product choice, who want AI speed but
 
 ## AI and search providers (decided)
 
-DeepSpace credits are 0 for now, so the agent uses two small interfaces. **Now:** Groq (owner's `GROQ_API_KEY`) + OpenAlex + Wikipedia. **Later:** DeepSpace `anthropic`, `exa`, `scholar`, by changing a setting. See [08-integrations.md](08-integrations.md).
+The agent uses two small interfaces. In production they call the DeepSpace integrations `anthropic/chat-completion` (Claude Haiku) and `exa/search` (web and research papers), paid from the owner's credits. `scholar/search-papers` is built and ready but not in use. A free fallback (Groq, OpenAlex, Wikipedia) is selected with `LLM_PROVIDER` / `SEARCH_PROVIDER`. See [08-integrations.md](08-integrations.md).
 
 ## Left out on purpose
 
 | Left out | Why |
 |---|---|
-| DeepSpace `anthropic` / `exa` / `scholar` integrations *in this build* | No credits yet. Kept as the later option behind the provider interfaces. |
+| Google Scholar as the default paper source | Built and ready, but DeepSpace's Scholar provider is out of searches (see [11](11-decisions-and-risks.md)). Exa's research-paper mode is the default. |
 | Payments / Stripe | No paying user in this flow. |
 | `fal` (images) | Decoration, no real value for research. |
 | Email + cron | Moved to **[FUTURE]** (watch mode) because of time. |

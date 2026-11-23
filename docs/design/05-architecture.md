@@ -13,7 +13,7 @@ flowchart LR
     AUTH[Auth / sign-in]
     REC[(RecordRoom\nDurable Object\nrooms, cards, runs...)]
     JOB[JobRoom\nbackground jobs]
-    PROXY[Integration proxy\nbilling + rate limits\nlater]
+    PROXY[Integration proxy\nbilled to the app owner]
   end
   subgraph Our worker - server
     ACT[Server actions\nstartRun, castVote, invite...]
@@ -23,15 +23,15 @@ flowchart LR
     LLM[LLMProvider interface]
     SRCH[SearchProvider interface]
   end
-  subgraph Now
+  subgraph DeepSpace integrations - default
+    AN[anthropic/chat-completion]
+    EXA[exa/search]
+    SCH[scholar/search-papers - built, not in use]
+  end
+  subgraph Free fallback - external providers
     GROQ[Groq - GROQ_API_KEY]
     OA[OpenAlex - papers]
     WIKI[Wikipedia]
-  end
-  subgraph Later - DeepSpace integrations
-    AN[anthropic/chat-completion]
-    EXA[exa/search]
-    SCH[scholar/search-papers]
   end
   UI -- sign in --> AUTH
   UI -- live subscribe --> REC
@@ -42,13 +42,13 @@ flowchart LR
   RUN -- read/write records --> REC
   RUN --> LLM
   RUN --> SRCH
-  LLM -- LLM_PROVIDER=groq --> GROQ
-  SRCH -- SEARCH_PROVIDER=free --> OA
-  SRCH -- SEARCH_PROVIDER=free --> WIKI
-  LLM -. LLM_PROVIDER=deepspace .-> PROXY
-  SRCH -. SEARCH_PROVIDER=deepspace .-> PROXY
-  PROXY -.-> AN
-  PROXY -.-> EXA
+  LLM -. LLM_PROVIDER=groq .-> GROQ
+  SRCH -. SEARCH_PROVIDER=free .-> OA
+  SRCH -. SEARCH_PROVIDER=free .-> WIKI
+  LLM -- LLM_PROVIDER=deepspace --> PROXY
+  SRCH -- SEARCH_PROVIDER=deepspace --> PROXY
+  PROXY --> AN
+  PROXY --> EXA
   PROXY -.-> SCH
   REC -- pushes changes --> UI
 ```
@@ -65,8 +65,8 @@ A **server action** is a function on our server that the browser calls with the 
 | Live updates | `useQuery` subscriptions (DO pushes `record_change`) | Board, steps, counts update without refresh. | `/concepts/realtime-sync#what-the-do-sends` |
 | Who's online | `usePresence` (60 s heartbeat) or `usePresenceRoom` | Show who is in the room. Per-room presence: T8. | `/guides/presence-and-cursors` |
 | Running the agent | Server action (`startRun`) + background job (`JobRoom`) | Action validates and enqueues; job runs steps. | `/guides/server-actions`; `/guides/background-jobs` |
-| Calling AI and search | **Now:** our own provider layer (`LLMProvider`, `SearchProvider`) calling Groq, OpenAlex and Wikipedia with plain server-side `fetch`. **Later:** DeepSpace integration proxy (`anthropic/chat-completion`, `exa/search`, `scholar/search-papers`) | Chosen by `LLM_PROVIDER` and `SEARCH_PROVIDER`. DeepSpace credits are 0 today, so the proxy is the later option. See [08](08-integrations.md). | `/guides/external-apis`; `npx deepspace integrations info <name>` |
-| Secrets | `npx deepspace secrets` store | **One secret now: the owner's `GROQ_API_KEY`, plus `OPENALEX_MAILTO`.** Set with `npx deepspace secrets set`, read by the worker as an env binding, never in the browser or git. DeepSpace integrations need none. | `/concepts/deployment#secrets-come-from-the-store-not-from-dev-vars`; `/cli-reference/commands#secrets` |
+| Calling AI and search | Our provider layer (`LLMProvider`, `SearchProvider`) calling the DeepSpace integration proxy (`anthropic/chat-completion`, `exa/search`; `scholar/search-papers` built, not in use) through `tools.integration`, billed to the app owner. Free fallback: Groq, OpenAlex and Wikipedia with plain server-side `fetch`. | Chosen by `LLM_PROVIDER` and `SEARCH_PROVIDER`. See [08](08-integrations.md). | `/guides/external-apis`; `npx deepspace integrations info <name>` |
+| Secrets | `npx deepspace secrets` store | **No secret for the default config** (DeepSpace integrations need none). The free fallback needs the owner's `GROQ_API_KEY`. Set with `npx deepspace secrets set`, read by the worker as an env binding, never in the browser or git. | `/concepts/deployment#secrets-come-from-the-store-not-from-dev-vars`; `/cli-reference/commands#secrets` |
 | Hosting / deploy | `npx deepspace deploy` to `<app>.app.space` | One command. | `AGENTS.md`; `wrangler.toml` |
 | Logs and usage | `npx deepspace logs`, `npx deepspace app usage` | Debug runs; watch spend. | `/cli-reference/commands#logs`; `/agents/website-maintenance-checklist-uptime-backups-ssl-updates` |
 | Tests | `npx deepspace test run` | API + e2e tests. | `package.json` scripts |
@@ -90,8 +90,8 @@ src/
   jobs.ts             runJob: 'scout-run' (plan -> search -> cards)
   agent/              plan.ts, search.ts, cards.ts, validate.ts (zod), prompts.ts  (server only)
     providers/        types.ts (the two interfaces), index.ts (getProviders from env settings),
-                      groq.ts, openalex.ts, wikipedia.ts            (now)
-                      deepspace-anthropic.ts, deepspace-exa.ts, deepspace-scholar.ts   (later)
+                      deepspace.ts (DeepSpaceAnthropicProvider, ExaSearch, ScholarSearch)
+                      groq.ts, openalex.ts, wikipedia.ts            (free fallback)
     pipeline.ts       Plan B: fixed pipeline inside one action (fallback, see 07)
   pages/(app)/(protected)/
                       rooms/index.tsx, rooms/[roomId].tsx (board), settings tabs
