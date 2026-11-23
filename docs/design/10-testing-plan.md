@@ -23,7 +23,7 @@
 | T-15 | **Invites** | API | Expired / revoked code refused; invite cannot make an owner. |
 | T-16 | **Provider contract** | unit | Each `LLMProvider` and `SearchProvider` (fake, DeepSpace Claude, Exa, Scholar, and the fallback Groq, OpenAlex, Wikipedia) returns the agreed shape (DeepSpace adapters use recorded sample responses, no network; the Scholar sample is the documented shape, not a recording); `SearchHit.url` is `https`; an adapter never leaks vendor fields. |
 | T-17 | **Provider switch** | unit/API | Changing `LLM_PROVIDER` / `SEARCH_PROVIDER` picks the right class with no agent change; an unknown value fails at startup. |
-| T-18 | **Missing key** | API | With no `GROQ_API_KEY` set, `startRun` refuses early; no run and no lock are created. |
+| T-18 | **Missing key** | API | Free fallback only (`LLM_PROVIDER = "groq"`): with no `GROQ_API_KEY` set, `startRun` refuses early; no run and no lock are created. The default DeepSpace config needs no key. |
 | T-19 | **Key never leaks** | unit | The key does not appear in logs, run records, error messages or any response. |
 | T-20 | **Plan B pipeline** | API | If built: one action creates 4 steps and cards, honors the lock and `stopRequested`. |
 | T-21 | **Kept rule** | unit | keeps > rejects and keeps >= 1 means kept; ties and zero votes stay open. |

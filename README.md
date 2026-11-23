@@ -61,7 +61,7 @@ AI and search run on the server through DeepSpace integrations, paid from the ap
 
 | Integration | What it does here | Rough cost |
 |---|---|---|
-| `anthropic/chat-completion` (`claude-haiku-5-5`) | Plans the searches, writes the evidence cards, writes the brief. Strict JSON, checked with zod. | A run uses 2 calls, a brief 1. Together under 0.2 credits. |
+| `anthropic/chat-completion` (`claude-haiku-5-5`) | Plans the searches, writes the evidence cards, writes the brief. Strict JSON, checked with zod. | A run uses 2 calls, a brief 1. About 0.05 credit per call (7 calls cost $0.0031 in `app usage`). |
 | `exa/search` | Web background (general search) and research papers (`category: "research paper"`). A run makes 3 searches. | About 0.9 credit per search, so **about 3 credits per run**. |
 | `scholar/search-papers` | Google Scholar papers. **Built and contract-tested but not in use:** DeepSpace's Scholar provider returned "Your account has run out of searches" (502, billing released) during the build, so it is not the default. Switch with `SEARCH_PROVIDER = "deepspace-scholar"` once it works again. | $0.0325 per call, one call per run. |
 
@@ -112,7 +112,7 @@ Design docs, then a spike, then one feature per session, each on its own branch 
 
 - Session log: [docs/agent-log.md](docs/agent-log.md)
 - Prompts: [docs/prompts/](docs/prompts/)
-- Tokens: [docs/token-usage.md](docs/token-usage.md). Sessions 00 to 07 cost about $10.6 API-equivalent (I use a subscription), and 95% of tokens were cache reads.
+- Tokens: [docs/token-usage.md](docs/token-usage.md). Sessions 00–10 cost about $14.5 API-equivalent (I use a subscription), and 95% of tokens were cache reads.
 
 ## Known gaps and what's next
 
