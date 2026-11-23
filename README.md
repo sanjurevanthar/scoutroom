@@ -107,14 +107,14 @@ I reviewed what happens when a run goes wrong and found 6 issues: [docs/design/1
 
 ## Tests and logs
 
-- Unit tests (vitest) and two-user Playwright tests. Automated tests use **fake providers**, so they make no real AI or search calls and cost nothing. Adapter contract tests use recorded sample responses (no network). One manual spec (`SCOUTROOM_REAL=1 npx deepspace test run e2e --grep "real integrations"`) runs one real scout run and one real brief for about 3 credits.
+- Unit tests (vitest) and two-user Playwright tests. Automated tests use **fake providers**, so they make no real AI or search calls and cost nothing.Adapter contract tests use sample responses (recorded for Claude and Exa, documented shape for Scholar), with no network. One manual spec (`SCOUTROOM_REAL=1 npx deepspace test run e2e --grep "real integrations"`) runs one real scout run and one real brief for about 3 credits.
 - `npx deepspace test run all` runs everything. `npm run test:unit` runs unit tests only. `npm run validate` runs the type check and unit tests.
 - `npx deepspace logs` shows worker logs.
 - Each run's `run_steps` records are its timeline (plan, search, cards) and are shown live in the room.
 
 ## How I worked with the agent
 
-Design docs, then a spike, then one feature per session, each on its own branch with a PR. An independent review session checked PR #1. I test, merge and deploy myself, from `main` only.
+Design docs, then a spike, then one feature per session, each on its own branch with a PR. An independent review session checked PR #1. Features 1–2 were merged by the agent before I set the PR rule (noted in doc 11); from Feature 3 on, I review, test, merge and deploy myself, from `main` only.
 
 - Session log: [docs/agent-log.md](docs/agent-log.md)
 - Prompts: [docs/prompts/](docs/prompts/)
