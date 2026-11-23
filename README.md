@@ -6,10 +6,16 @@ A shared, live research room: a server-side AI agent finds evidence, your team v
 
 ## What it does
 
-1. **Rooms and roles.** Create a room with a research question. Invite people with links as `researcher` or `viewer` (the creator is `owner`).
+1. **Rooms and roles.** Create a room with a research question. The creator is `owner`. The owner copies one invite link (valid 7 days); everyone who opens it joins as `researcher`. The owner can then change a member to `viewer` (read-only) or back.
 2. **Live agent run.** An owner or researcher clicks *Run scout*. The agent plans searches, searches, and writes evidence cards. Everyone in the room watches the steps and cards appear live.
-3. **Team votes.** Each member votes keep or reject on each card. Counts update live for everyone.
+3. **Team votes.** Owners and researchers vote keep or reject on each card. Viewers can see the counts but not vote. Counts update live for everyone.
 4. **Cited brief.** *Write brief* summarises **only the kept cards**, with `[n]` citations that jump to the card.
+
+## Main tradeoff
+
+I chose a **bounded, visible agent** over a free-roaming one: a step budget (8 tool calls per run), a run limit per room (5), strict JSON from the model, and citations that must point to real kept cards. It costs less, and the team stays in control because they watch every step and decide what is kept. The price is a narrower agent that cannot wander off to chase every lead.
+
+AI and search sit behind two provider interfaces, so which provider is used is a setting, not a code change (see [DeepSpace integrations used](#deepspace-integrations-used)).
 
 ## Try it in 2 minutes
 
@@ -30,9 +36,9 @@ A shared, live research room: a server-side AI agent finds evidence, your team v
 | Who is online | `usePresenceRoom` | Shows who is in the room. |
 | Safe server logic | Server actions | `startRun`, `castVote`, `generateBrief`, invites and roles. |
 | Long work | Background jobs | `startRun` enqueues the agent run. Clients cannot enqueue. |
-| No double runs or votes | `uniqueOn` | One lock per room, one vote per person per card, one `seq` per brief. |
+| No double runs or votes | `uniqueOn` | One lock per room, one vote per person per card, one sequence number per brief (Brief 1, 2, 3…), so two clicks cannot create the same one. |
 | AI and search | Integrations (`tools.integration`) | The job calls `anthropic/chat-completion` and `exa/search` from the server, paid from the owner's credits. No key in the app. |
-| Secrets | `npx deepspace secrets` | Only for the optional free fallback (a Groq key). Never in code or the browser. |
+| Secrets | `npx deepspace secrets` | Only for the optional free fallback: the Groq key, and an optional OpenAlex key. Never in code or the browser. |
 | Hosting | `npx deepspace deploy` | Runs at `scoutroom.app.space`. |
 | Debugging | `npx deepspace logs` | Worker logs for runs. |
 
@@ -63,7 +69,7 @@ AI and search run on the server through DeepSpace integrations, paid from the ap
 |---|---|---|
 | `anthropic/chat-completion` (`claude-haiku-5-5`) | Plans the searches, writes the evidence cards, writes the brief. Strict JSON, checked with zod. | A run uses 2 calls, a brief 1. About 0.05 credit per call (7 calls cost $0.0031 in `app usage`). |
 | `exa/search` | Web background (general search) and research papers (`category: "research paper"`). A run makes 3 searches. | About 0.9 credit per search, so **about 3 credits per run**. |
-| `scholar/search-papers` | Google Scholar papers. **Built and contract-tested but not in use:** DeepSpace's Scholar provider returned "Your account has run out of searches" (502, billing released) during the build, so it is not the default. Switch with `SEARCH_PROVIDER = "deepspace-scholar"` once it works again. | $0.0325 per call, one call per run. |
+| `scholar/search-papers` | Google Scholar papers. **Built and contract-tested but not in use:** DeepSpace's Scholar provider returned "Your account has run out of searches" (502, billing released) during the build, so it is not the default. Switch with `SEARCH_PROVIDER = "deepspace-scholar"` once it works again. | $0.0325 per call (about 3.25 credits), one call per run. Contract-tested against the documented response shape, not a recorded real response (the real calls failed). |
 
 Two integrations are in use and one is built and ready. A run is about 3 credits and a brief is a fraction of a credit, so 500 credits cover well over 100 runs. Exa results are saved as `background` cards (confidence capped at 60%) or `paper` cards; there is no separate "web" badge. Details and the setting values: [docs/design/08-integrations.md](docs/design/08-integrations.md). If the owner runs out of credits, the run or brief fails with "Out of DeepSpace credits" and nothing falls back silently.
 
@@ -87,7 +93,7 @@ Left out on purpose: payments (no paying user), `fal` images (decoration), `emai
 - Budget guard: per-room run limit (5) and a hard cap of 8 tool calls per run.
 - One run per room at a time (a `uniqueOn` lock).
 - Model output must be strict JSON; cards and briefs are validated, and a citation must point to a real source or card.
-- Prompt-injection guard: search text is marked as untrusted data, the agent has no tools, and only our code saves records.
+- Prompt-injection guard: search text is marked as untrusted data, the model cannot call tools or write records, and only our code saves data.
 - Secrets live only in `npx deepspace secrets`. A pre-commit check (`scripts/check-secrets.sh`) blocks secret-like content.
 
 Details: [docs/design/09-security-and-privacy.md](docs/design/09-security-and-privacy.md).
@@ -125,11 +131,15 @@ Design docs, then a spike, then one feature per session, each on its own branch 
 ## Run locally
 
 ```bash
+git clone https://github.com/sanjurevanthar/scoutroom.git
+cd scoutroom
 npm install
 npx deepspace auth login
 npx deepspace dev start
 npx deepspace test run all
 ```
+
+`wrangler.toml` holds my app id (`DEEPSPACE_APP_ID`). To run your own copy as a separate app, run `npx deepspace app init --new-id` first. To turn on the secret check before committing, run `git config core.hooksPath .githooks`.
 
 Local dev uses the providers in `wrangler.toml` (DeepSpace integrations), so a real run spends a few credits. Check with `npx deepspace app usage`.
 
