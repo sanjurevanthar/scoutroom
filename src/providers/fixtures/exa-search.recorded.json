@@ -1,0 +1,35 @@
+{
+ "results": [
+  {
+   "title": "Evaluating Retrieval Augmented Generation: A Comprehensive Review of Evaluation Dimensions, Question Types, and Application | SN Computer Science | Springer Nature Link",
+   "url": "https://link.springer.com/article/10.1007/s42979-026-05134-x",
+   "publishedDate": "2026-06-16T00:00:00.000Z",
+   "author": "Knollmeyer, Simon, Caymazer, Oğuz, Koval, Leonid, Akmal, Muhammad Uzair, Asif, Saara",
+   "id": "https://link.springer.com/article/10.1007/s42979-026-05134-x",
+   "text": "Evaluating Retrieval Augmented Generation: A Comprehensive Review of Evaluation Dimensions, Question Types, and Application | SN Computer Science | Springer Nature Link\n\n# Evaluating Retrieval Augmented Generation: A Comprehensive Review of Evaluation Dimensions, Question Types, and Application\n\n- S"
+  },
+  {
+   "title": "An Overview on RAG Evaluation",
+   "url": "https://weaviate.io/blog/rag-evaluation",
+   "publishedDate": "2023-11-21T00:00:00.000Z",
+   "author": "Erika Shorten, Connor Shorten",
+   "id": "https://weaviate.io/blog/rag-evaluation",
+   "text": "An Overview on RAG Evaluation | Weaviate\n\n# An Overview on RAG Evaluation\n\nNovember 21, 2023 · 30 min read\n\nErika Shorten Technology Partner Manager Connor Shorten Product Researcher\n\nRetrieval Augmented Generation (RAG) is picking up steam as one of the most popular applications of Large Language M"
+  },
+  {
+   "title": "Retrieval Augmented Generation Evaluation in the Era of Large Language Models: A Comprehensive Survey",
+   "url": "https://arxiv.org/abs/2504.14891",
+   "publishedDate": "2025-04-21T06:39:47.000Z",
+   "author": "Aoran Gan, Hao Yu, Kai Zhang, Qi Liu, Wenyu Yan, Zhenya Huang, Shiwei Tong, Guoping Hu",
+   "id": "https://exa.ai/library/publication/7c2wvryq787",
+   "text": "# Retrieval Augmented Generation Evaluation in the Era of Large Language Models: A Comprehensive Survey\n\narXiv:2504.14891. cs.CL. Submitted 2025-04-21.\n\n## Authors\n\nAoran Gan, Hao Yu, Kai Zhang, Qi Liu, Wenyu Yan, Zhenya Huang, Shiwei Tong, Guoping Hu\n\n## Details\n\n- License: http://creativecommons.o"
+  }
+ ],
+ "costDollars": {
+  "total": 0.007,
+  "search": {
+   "neural": 0.007
+  }
+ },
+ "costUsd": 0.007
+}

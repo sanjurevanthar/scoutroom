@@ -33,8 +33,10 @@ export default defineConfig({
     // the app can start (`uv_interface_addresses`).
     command: `npx vite --port ${PORT} --strictPort --host 127.0.0.1`,
     cwd: '..',
-    // Automated tests never call Groq/OpenAlex/Wikipedia: vite.config.ts gives the worker fake providers.
-    env: { ...(process.env as Record<string, string>), SCOUTROOM_FAKE_PROVIDERS: '1' },
+    // Automated tests never call any real AI or search provider: vite.config.ts gives the worker fake providers.
+    // Opt-in only: SCOUTROOM_REAL=1 (used by tests/real-integrations.manual.spec.ts) runs the worker with the
+    // providers from wrangler.toml, i.e. real DeepSpace integrations that spend credits.
+    env: { ...(process.env as Record<string, string>), ...(process.env.SCOUTROOM_REAL === '1' ? { SCOUTROOM_FAKE_PROVIDERS: '' } : { SCOUTROOM_FAKE_PROVIDERS: '1' }) },
     // Readiness gates on the auth plane, not just vite: /api/auth/ok only
     // answers once workerd behind /api/* has booted, so no test starts
     // against a half-up server. Playwright keeps polling through non-OK

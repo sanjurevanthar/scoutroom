@@ -16,7 +16,8 @@ const testMode = process.env.SCOUTROOM_FAKE_PROVIDERS === '1'
 // accounts to .wrangler/state; past ~100 rooms the SDK's team-read query hits SQLite's 100-variable
 // limit and random e2e tests fail with "Connecting..." (docs/design/11, R12). Fresh storage also
 // keeps tests away from your real dev data.
-const testStatePath = testMode ? mkdtempSync(join(tmpdir(), 'scoutroom-test-state-')) : undefined
+// SCOUTROOM_REAL=1 (manual real-integration run) also gets fresh storage, with real providers.
+const testStatePath = testMode || process.env.SCOUTROOM_REAL === '1' ? mkdtempSync(join(tmpdir(), 'scoutroom-test-state-')) : undefined
 
 export default defineConfig({
   plugins: [

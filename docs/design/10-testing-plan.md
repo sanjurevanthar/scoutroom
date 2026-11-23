@@ -21,7 +21,7 @@
 | T-13 | **Stop** | e2e | Stop ends the run as `stopped` after the current step; lock released. |
 | T-14 | **Vote rules** | API | One vote per person per card; changing a vote does not double count. |
 | T-15 | **Invites** | API | Expired / revoked code refused; invite cannot make an owner. |
-| T-16 | **Provider contract** | unit | Each `LLMProvider` and `SearchProvider` (fake, Groq, OpenAlex, Wikipedia, later DeepSpace) returns the agreed shape; `SearchHit.url` is `https`; an adapter never leaks vendor fields. |
+| T-16 | **Provider contract** | unit | Each `LLMProvider` and `SearchProvider` (fake, DeepSpace Claude, Exa, Scholar, and the fallback Groq, OpenAlex, Wikipedia) returns the agreed shape (DeepSpace adapters use recorded sample responses, no network; the Scholar sample is the documented shape, not a recording); `SearchHit.url` is `https`; an adapter never leaks vendor fields. |
 | T-17 | **Provider switch** | unit/API | Changing `LLM_PROVIDER` / `SEARCH_PROVIDER` picks the right class with no agent change; an unknown value fails at startup. |
 | T-18 | **Missing key** | API | With no `GROQ_API_KEY` set, `startRun` refuses early; no run and no lock are created. |
 | T-19 | **Key never leaks** | unit | The key does not appear in logs, run records, error messages or any response. |
@@ -30,7 +30,7 @@
 
 Before the build, a **spike** (T2, T3, T4, T6; measure T1, T5) decides Plan A vs Plan B; see [07](07-agent-run-design.md).
 
-For T-8 to T-11, the provider calls are replaced by a fake (a fast stub) so tests are quick, free, and repeatable.
+For T-8 to T-11, the provider calls are replaced by a fake (a fast fake provider) so tests are quick, free, and repeatable.
 *Pattern source: https://docs.deep.space/guides/background-jobs#testing-without-waiting-for-a-real-upstream, https://docs.deep.space/guides/server-actions#testing-server-actions*
 
 ## How
@@ -53,7 +53,7 @@ For T-8 to T-11, the provider calls are replaced by a fake (a fast stub) so test
 - [ ] Write brief: every `[n]` links to a kept card; clicking it highlights the card; "Stale" shows after a vote changes.
 - [ ] `npx deepspace logs` shows no errors; `npx deepspace app usage` shows spend is small.
 - [ ] **Seeded demo room (Sunday):** a room with a real question, a finished run, ~8 cards and a few votes, created before the demo as a backup if search, the AI provider or the network is slow.
-- [ ] `GROQ_API_KEY` and `OPENALEX_MAILTO` are in the secrets store (not in git); Groq free-tier rate limits are known (no spending limit needed).
+- [ ] `LLM_PROVIDER` and `SEARCH_PROVIDER` in `wrangler.toml` are `deepspace`; credits remain (`npx deepspace app usage`). Only if the free fallback is used: `GROQ_API_KEY` is in the secrets store (not in git).
 
 ## Test isolation
 

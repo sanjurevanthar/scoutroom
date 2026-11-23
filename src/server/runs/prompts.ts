@@ -52,7 +52,7 @@ export function planMessages(question: string): ChatMessage[] {
       role: 'system',
       content:
         'You plan literature searches for a research team. Given a research question, write 2 short search queries for academic papers ' +
-        'and 1 short query for a Wikipedia background article. Queries are plain keywords, no quotes or operators. ' +
+        'and 1 short query for a web page that gives background. Queries are plain keywords, no quotes or operators. ' +
         'Reply with JSON only: {"paperQueries":[string,string],"backgroundQuery":string}.',
     },
     { role: 'user', content: `Research question: ${question}` },

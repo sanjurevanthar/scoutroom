@@ -202,6 +202,27 @@ How I directed the coding agent, session by session. Each entry follows this tem
 
 ---
 
+## Session 10: Switch AI and search to DeepSpace integrations
+- Date/time: 2026-11-22
+- Goal: Run production on the DeepSpace integrations `anthropic/chat-completion`, `exa/search` and `scholar/search-papers` instead of the free fallback, on `feat/deepspace-integrations`. Server-side only, no agent changes. No merge, no deploy.
+- My prompt: [docs/prompts/10-deepspace-integrations.md](prompts/10-deepspace-integrations.md).
+- What the agent did:
+  - Checked the integrations first (`integrations info`), the docs for calling them from server code (jobs get `tools.integration` through `createActionTools`; billing follows `src/integrations.ts`, default owner), and the credit balance (500 of 500).
+  - Replaced the DeepSpace stubs with real adapters in `src/providers/deepspace.ts`: `DeepSpaceAnthropicProvider` (`claude-haiku-5-5`), `ExaSearch` (web and research-paper modes) and `ScholarSearch`. `getProviders` / `getLlm` now take `tools.integration`; the job, `startRun` and `generateBrief` pass it.
+  - New errors: `CreditsExhaustedError` ("Out of DeepSpace credits...") and `ProviderError` (safe message). A search step no longer swallows the credits error. No silent fallback.
+  - Production config in `wrangler.toml`: `LLM_PROVIDER = "deepspace"`, `SEARCH_PROVIDER = "deepspace"`. Groq, OpenAlex and Wikipedia stay as the fallback.
+  - Tests: adapter contract tests on recorded samples, pipeline tests for credits and provider errors and `maxQueries`. A manual spec (`SCOUTROOM_REAL=1`) does one real run and one real brief.
+  - Docs: README, design docs 00, 01, 05, 06, 07, 08, 09, 10, 11, 12, 13 describe the current design; history only in doc 11 (D8, R14, R15).
+- Decisions:
+  - Exa results map to `background` (and `paper` in research-paper mode), not a new `web` type: no schema or UI change.
+  - `scholar/search-papers` failed on DeepSpace's side ("SerpAPI error 429: Your account has run out of searches", HTTP 502, billing released). I asked; the answer was to use Exa's research-paper mode for papers, keep Scholar built but not default (`SEARCH_PROVIDER = "deepspace-scholar"`), and not claim three integrations in use.
+  - Scholar gets one query per run (`maxQueries`) because it costs $0.0325 a call. Exa papers use two.
+- Test results: see the PR. `npm run check:reliability` green; `npx deepspace test run all` 3 of 3 green in the foreground.
+- What I verified myself:
+- Tokens / cost (from /cost): see [token-usage.md](token-usage.md) (no row for this session yet)
+
+---
+
 ## Session 09b: Fix reliability issue 1 (a crashed run blocks the room)
 - Date/time: 2026-11-22
 - Goal: Fix issue 1 from [docs/design/13-reliability.md](design/13-reliability.md) on `fix/stuck-runs`, small and safe: heartbeat, one stale rule, lazy reaper in `startRun`, a "stuck" note in the UI. No change to quota rules, retries or card saving. No merge, no deploy.

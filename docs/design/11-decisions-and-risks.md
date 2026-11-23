@@ -1,16 +1,16 @@
 # 11 · Decisions, Risks and Open Questions
 
-> **In simple words:** This page lists the main choices we made and why, what could go wrong with a plan B, the facts I could not confirm (TO VERIFY), and the answers you already gave. The biggest tradeoff: with no DeepSpace credits, AI and search sit behind provider interfaces that use your Groq key (free tier) and free sources. The core still uses DeepSpace.
+> **In simple words:** This page lists the main choices we made and why, what could go wrong with a plan B, the facts I could not confirm (TO VERIFY), and the answers you already gave. The biggest tradeoff: AI and search sit behind provider interfaces, so DeepSpace integrations or a free fallback can be selected by a setting.
 
 ## The main tradeoff
 
-> **No DeepSpace credits, so AI and search sit behind provider interfaces using free sources; the core uses DeepSpace primitives; switching to DeepSpace integrations is a config change.**
+> **AI and search sit behind provider interfaces; production uses the DeepSpace integrations `anthropic/chat-completion` and `exa/search`, and a free fallback is a config change away.**
 
 | | What we gain | What we give up |
 |---|---|---|
-| Provider interfaces (`LLMProvider`, `SearchProvider`) | We can build and demo now. Switching to DeepSpace `anthropic`, `exa`, `scholar` later is two config values (`LLM_PROVIDER`, `SEARCH_PROVIDER`). | One more layer to write and test. Fewer "built-in DeepSpace" points for AI and search. |
-| Free sources (OpenAlex, Wikipedia) | No search cost. | Weaker web coverage than Exa; many cards will be papers or background facts. |
-| Owner's Groq key (free tier) | Works today, no bill. | Rate limits (HTTP 429) instead of cost; the owner must still guard the key (see D10). |
+| Provider interfaces (`LLMProvider`, `SearchProvider`) | Switching between DeepSpace integrations and the free fallback is two config values (`LLM_PROVIDER`, `SEARCH_PROVIDER`). | One more layer to write and test. |
+| DeepSpace integrations (Claude Haiku, Exa) | Better web coverage, no keys in the app, one bill. | About 3 credits per run, paid by the owner; a run fails cleanly if credits run out. |
+| Free fallback (Groq, OpenAlex, Wikipedia) | Works without DeepSpace credits. | Rate limits (HTTP 429) instead of cost; weaker web coverage; the owner must guard the Groq key (see D10). |
 | DeepSpace for everything else | Auth, RBAC, records, live sync, presence, jobs, secrets, deploy, logs, tests stay real DeepSpace. | None. |
 
 ## Answers you gave (now in the docs)
@@ -18,7 +18,7 @@
 | # | Your answer | Where it landed |
 |---|---|---|
 | Q1 | Job if the spike confirms T2-T6; else one action with a fixed pipeline. Document both. | [07](07-agent-run-design.md) (Plan A, Plan B, Spike) |
-| Q2 | `LLMProvider` (Groq now, DeepSpace Haiku later) and `SearchProvider` (OpenAlex + Wikipedia now, Exa + Scholar later), chosen by env setting. | [08](08-integrations.md), D8 |
+| Q2 | `LLMProvider` (DeepSpace Haiku; Groq as fallback) and `SearchProvider` (Exa; Scholar built; OpenAlex + Wikipedia as fallback), chosen by env setting. | [08](08-integrations.md), D8 |
 | Q3 | Default run limit 5 per room. | [06](06-data-model.md), [07](07-agent-run-design.md) |
 | Q4 | Owner's AI key pays. Recorded as a tradeoff. | D10 below |
 | Q5 | Invites by link. | D7 |
@@ -62,16 +62,17 @@
 - **Why:** no need to list or email users; fewer privacy issues. **Tradeoff:** anyone with the link can join until it expires or is revoked.
 
 ### D8 · Provider interfaces for AI and search
-- **Decision:** the agent depends on `LLMProvider` and `SearchProvider` only. Implementations are chosen by `LLM_PROVIDER` and `SEARCH_PROVIDER` (non-secret settings). The key lives in the DeepSpace secrets store.
-- **Why:** DeepSpace credits are 0 today; interfaces let us build now and switch later without touching the agent.
-- **Tradeoff:** extra code and a contract-test suite; a small risk that the DeepSpace adapters differ from the free ones in output shape (T9 for DeepSpace, T15 for free sources). Adapters normalize to `SearchHit`.
+- **Decision:** the agent depends on `LLMProvider` and `SearchProvider` only. Implementations are chosen by `LLM_PROVIDER` and `SEARCH_PROVIDER` (non-secret settings). The free fallback's key lives in the DeepSpace secrets store.
+- **Why:** provider interfaces from the start. Early builds ran on the free fallback because I misread my DeepSpace credit balance as 0; on the final day I found 500 free credits and switched production to DeepSpace integrations. The switch needed new adapters but no agent changes.
+- **Tradeoff:** extra code and a contract-test suite; a small risk that adapters differ in output shape (T9 for DeepSpace, T15 for free sources). Adapters normalize to `SearchHit`.
+- **Exa results:** saved as `background` (web) or `paper` (research-paper mode), not a new `web` type, because that needs no schema or UI change and background cards already get the lower confidence cap.
 
 ### D9 · Spike before the real build
 - **Decision:** a half-day throwaway test of T2, T3, T4, T6 (and measure T1, T5) decides Plan A vs Plan B (rule in [07](07-agent-run-design.md)).
 - **Why:** these facts are not in the docs, and a wrong guess would cost far more than half a day.
 
-### D10 · The owner's AI key pays for all runs
-- **Decision:** every run uses the owner's Groq key (`GROQ_API_KEY`) (one shared key in the secrets store).
+### D10 · The owner pays for all runs
+- **Decision:** every run is billed to the owner: DeepSpace credits in the default config (integrations bill the app owner), or the owner's `GROQ_API_KEY` in the free fallback.
 - **Why:** simplest and works now; researchers need no accounts or keys.
 - **Tradeoff:** the owner carries all cost and the key is a high-value secret. Controls: run limit (5 per room), hard caps per run, secret only in the store, never logged, and free-tier rate limits (Groq returns 429; no spending limit needed). If a room is abused, the owner can lower `runLimit` to 0 or rotate the key.
 
@@ -96,7 +97,7 @@
 | R2 | Job queue runs one job at a time for the **whole app** (T5) | medium | Accept for the demo; else a job room per ScoutRoom or shorter steps. |
 | R3 | Job path fails the spike (T4, T6) | medium | Plan B: one action, fixed pipeline. |
 | R4 | Groq model does not return clean JSON (T14) | medium | zod validation; repair call (Plan A); stricter prompt; fall back to a different model id. |
-| R5 | Free sources give weak or irrelevant results | high | Show results transparently in steps; humans vote; switch to Exa + Scholar when credits exist. |
+| R5 | Search gives weak or irrelevant results | medium | Show results transparently in steps; humans vote. Exa is the default; the free fallback is weaker. |
 | R6 | Free API rate limits or downtime (OpenAlex: shared $0.10/day per IP without a key, about 100 requests; Wikipedia) | high | Retry once, skip the failed query, keep going; demo from the seeded room. |
 | R7 | Groq key leaks, or free-tier rate limits (429) stall runs | low | Secrets store only; 429 retry/backoff and "rate limited, try again" status; redaction + pre-commit scan; rotate key. |
 | R8 | Deadline (Sunday night) | high | Cut F4 first. Then simplify invites to one researcher link. Demo from a seeded room. |
@@ -105,6 +106,8 @@
 | R11 | Lock stays stuck after a crash | low (was under-rated; now fixed) | `expiresAt` rescue in `startRun`. Reviewed in session 09a: the run record also stays `running` and the UI stays blocked, so this is more than low; fixed in 09b with a heartbeat and a lazy reaper in `startRun`, see [13](13-reliability.md) issue 1. |
 | R12 | A person who is in about 100 or more rooms breaks live reads: the SDK's `team` read query uses one SQL `?` per room and hits SQLite's 100-variable limit ("too many SQL variables", page stuck on "Connecting..."). Found in the session 06 review: it made e2e tests flaky because the test accounts kept every room they created. | low for real users, high for test accounts | Tests now run on fresh, throwaway storage (`vite.config.ts`). For real users: add a way to leave or delete rooms, or cap rooms per user. Not built. |
 | R13 | Run reliability gaps: lock lifetime, no transaction in `startRun`, half-saved cards, retries that never fire, quota not refunded | medium | Documented with options and checks in [13](13-reliability.md); issue 1 fixed first, the rest future. |
+| R14 | `scholar/search-papers` is unavailable on DeepSpace's side. Found 2026-11-22 (two real calls, same result): HTTP 502 `upstream_provider_error`, "scholar/search-papers (502): SerpAPI error 429: Your account has run out of searches." Billing was released (no credits charged). | medium (one of three integrations cannot be used) | `ScholarSearch` is built and contract-tested against the documented SerpApi shape (not a recording), but not the default. Papers come from Exa's research-paper mode. When Scholar works: set `SEARCH_PROVIDER = "deepspace-scholar"` and replace `src/providers/fixtures/scholar-search.documented.json` with a recorded sample. |
+| R15 | Out of DeepSpace credits (500 free credits, about 3 per run) | low | Run and brief fail with "Out of DeepSpace credits" (402 handled, never swallowed as a failed search). Check `npx deepspace app usage`; switch to the free fallback with two settings if needed. |
 
 ## Spike results (session 02, branch `spike/verify`, local `deepspace test run`)
 
@@ -129,7 +132,7 @@ Groq model chosen: **`openai/gpt-oss-20b`** (from `GET /models`: small and fast,
 | T1 server-action time limit | **STILL UNKNOWN** | Not tested (local dev does not show production limits). The docs give no number for an action; they say `waitUntil` work is killed 30 s after the response, and a job alarm has a 15-minute wall time. So long work must go in the job, not an action. This is why Plan A is preferred. |
 | T11 `ctx.continue` size and behavior | **STILL UNKNOWN** | The docs describe it (`resumeFrom` holds the last checkpoint; retries re-run the handler) but give no size limit. Not needed: one pass of plan, search and cards fits well inside 15 minutes. |
 | T8 per-room presence API | **STILL UNKNOWN** | Not part of this spike. |
-| T9 DeepSpace integration fields | **STILL UNKNOWN** (not tested: no DeepSpace credits) | Deliberately no `anthropic`, `exa` or `scholar` calls. |
+| T9 DeepSpace integration fields | **CONFIRMED later (session 10)** | Real calls to `anthropic/chat-completion` and `exa/search` returned the fields the adapters use (recorded in `src/providers/fixtures/`). `scholar/search-papers` failed upstream (R14). |
 | T2 original: `read: 'team'` with `team_members` | **STILL UNKNOWN** | Spike used `read: true` and a role column checked in the action. The team-read rule was not tested. |
 
 ### New findings that change the plan
@@ -142,8 +145,8 @@ Groq model chosen: **`openai/gpt-oss-20b`** (from `GET /models`: small and fast,
 interface SearchHit { title; url; snippet; sourceName; year? }
 interface SearchProvider { search(query, limit?): Promise<SearchHit[]> }
 interface LLMProvider { complete(messages, jsonSchema?): Promise<{ text; usage? }> }
-// Now:   GroqProvider, OpenAlexSearch, WikipediaSearch
-// Later: DeepSpaceAnthropicProvider, ExaSearch, ScholarSearch  (not tested: no DeepSpace credits)
+// Fallback: GroqProvider, OpenAlexSearch, WikipediaSearch
+// DeepSpace: DeepSpaceAnthropicProvider, ExaSearch, ScholarSearch (src/providers/deepspace.ts)
 ```
 
 ## TO VERIFY (original list; results are in the spike table above)

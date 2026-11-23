@@ -115,12 +115,14 @@ export interface Env extends DOBindings<typeof __DO_MANIFEST__> {
    * an authenticated app owner/admin. deepspace dev/test set it locally.
    */
   ALLOW_DEBUG_ROUTES?: string
-  /** Non-secret provider switches (wrangler.toml [vars]): groq | deepspace | fake, free | deepspace | fake. */
+  /** Non-secret provider switches (wrangler.toml [vars]): LLM: deepspace | groq | fake. Search: deepspace | deepspace-scholar | free | fake. */
   LLM_PROVIDER?: string
   SEARCH_PROVIDER?: string
   /** Non-secret: ms without progress before a run counts as stuck (default 180000, docs/design/07). */
   STALE_RUN_MS?: string
   GROQ_MODEL?: string
+  /** Non-secret: Claude model for the DeepSpace LLM provider (default claude-haiku-5-5). */
+  DEEPSPACE_LLM_MODEL?: string
   /** Secrets from `npx deepspace secrets`. Server only: never logged, never sent to a client. */
   GROQ_API_KEY?: string
   OPENALEX_API_KEY?: string

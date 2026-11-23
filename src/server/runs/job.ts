@@ -20,7 +20,7 @@ export async function runScoutJob(job: Job, ctx: JobContext, env: ProviderEnv, t
   const state = (job.resumeFrom as RunState | undefined) ?? initialState(payload.runId, payload.teamId, payload.question)
   const store = new ToolsRunStore(tools)
   try {
-    const next = await runTick(state, { providers: getProviders(env), store, signal: ctx.signal })
+    const next = await runTick(state, { providers: getProviders(env, tools.integration), store, signal: ctx.signal })
     if (next) ctx.continue(next, { afterMs: TICK_GAP_MS })
   } catch (e) {
     // Log the kind of error only: provider messages are ours, but never log request data.

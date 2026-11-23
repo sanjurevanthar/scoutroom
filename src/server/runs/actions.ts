@@ -68,7 +68,7 @@ export const startRun: ActionHandler<Env> = async ({ userId, params, tools, env 
 
   // Refuse early, before any lock or run exists, if the AI provider has no key.
   try {
-    getProviders(env)
+    getProviders(env, tools.integration)
   } catch {
     return fail('AI provider not configured')
   }

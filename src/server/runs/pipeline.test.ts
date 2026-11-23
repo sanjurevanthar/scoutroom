@@ -4,10 +4,10 @@ import { MAX_TOOL_CALLS } from '../../lib/run-types'
 import type { RunRecord } from '../../lib/run-types'
 import { FakeLLM, FakeSearch, defaultFakeResponder } from '../../providers/fake'
 import type { FakeResponder } from '../../providers/fake'
-import { RateLimitedError } from '../../providers/types'
+import { CreditsExhaustedError, ProviderError, RateLimitedError } from '../../providers/types'
 import { MemoryStore } from './memory-store'
 import { failRun, initialState, runTick } from './pipeline'
-import type { RunState } from './pipeline'
+import type { PipelineDeps, RunState } from './pipeline'
 
 const RUN = 'run-1'
 const TEAM = 'team-1'
@@ -27,7 +27,7 @@ function setup(opts: { respond?: FakeResponder; question?: string; run?: Partial
   const llm = new FakeLLM(opts.respond ?? defaultFakeResponder)
   const papers = new FakeSearch('paper')
   const background = new FakeSearch('background')
-  const deps = { store, providers: { llm, papers, background } }
+  const deps: PipelineDeps = { store, providers: { llm, papers, background } }
   return { store, llm, papers, background, deps, state: initialState(RUN, TEAM, question) }
 }
 
@@ -235,5 +235,39 @@ describe('scout pipeline', () => {
     await runTick(ctx.state, ctx.deps)
     await runTick(ctx.state, ctx.deps) // same state again, as a retried job would
     expect(ctx.store.steps.filter((s) => s.seq === 1)).toHaveLength(1)
+  })
+
+  it('out of DeepSpace credits in the LLM fails the run with a clear message', async () => {
+    const ctx = setup({ respond: () => { throw new CreditsExhaustedError() } })
+    await runAll(ctx)
+    const run = ctx.store.runs.get(RUN)!
+    expect(run.status).toBe('failed')
+    expect(run.error).toMatch(/^Out of DeepSpace credits/)
+  })
+
+  it('out of credits in a search is NOT swallowed as a failed search', async () => {
+    const ctx = setup()
+    ctx.deps.providers.papers = { name: 'x', kind: 'paper', search: async () => { throw new CreditsExhaustedError() } }
+    await runAll(ctx)
+    expect(ctx.store.runs.get(RUN)!.error).toMatch(/^Out of DeepSpace credits/)
+
+    const ctx2 = setup()
+    ctx2.deps.providers.background = { name: 'x', kind: 'background', search: async () => { throw new CreditsExhaustedError() } }
+    await runAll(ctx2)
+    expect(ctx2.store.runs.get(RUN)!.error).toMatch(/^Out of DeepSpace credits/)
+  })
+
+  it('a provider error shows its own safe message', async () => {
+    const ctx = setup({ respond: () => { throw new ProviderError('The AI service is unavailable right now. Try again in a minute.') } })
+    await runAll(ctx)
+    expect(ctx.store.runs.get(RUN)!.error).toBe('The AI service is unavailable right now. Try again in a minute.')
+  })
+
+  it('a paid paper search with maxQueries 1 is called once, not twice', async () => {
+    const ctx = setup()
+    const queries: string[] = []
+    ctx.deps.providers.papers = { name: 'x', kind: 'paper', maxQueries: 1, search: async (q) => (queries.push(q), []) }
+    await runAll(ctx)
+    expect(queries).toHaveLength(1)
   })
 })
